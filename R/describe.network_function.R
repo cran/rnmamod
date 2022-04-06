@@ -7,43 +7,32 @@
 #' @param data A data-frame of a one-trial-per-row format containing arm-level
 #'   data of each trial. See 'Format' in \code{\link{run_model}}.
 #' @param drug_names A vector of labels with the name of the interventions in
-#'   the order they appear in the argument \code{data}. If \code{drug_names} is
-#'   not defined, the order of the interventions as they appear in \code{data}
-#'   is used, instead.
-#' @param measure Character string indicating the effect measure with values
-#'   \code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-#'   mean difference, standardised mean difference and ratio of means,
-#'   respectively.
+#'   the order they appear in the argument \code{data}.
+#' @param measure Character string indicating the effect measure. For a binary
+#'   outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+#'   \code{"RD"} for the odds ratio, relative risk, and risk difference,
+#'   respectively. For a continuous outcome, the following can be considered:
+#'   \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+#'   standardised mean difference and ratio of means, respectively.
 #'
 #' @return A list of scalar results and two data-frames to be passed to
 #'   \code{\link{netplot}}. The scalar results include:
-#'   \tabular{ll}{
-#'    \code{direct_comp} \tab The number of observed comparisons in the
-#'    network. \cr
-#'    \tab \cr
-#'    \code{two_arm_ns} \tab The number of two-arm trials in the network. \cr
-#'    \tab \cr
-#'    \code{multi_arm_ns} \tab The number of multi-arm trials in the
-#'    network. \cr
-#'    \tab \cr
-#'    \code{total_rand_network} \tab The total number of randomised participants
-#'     in the network. \cr
-#'    \tab \cr
-#'    \code{prop_obs_network} \tab The proportion of participants who completed
-#'     the trial. \cr
-#'    \tab \cr
-#'    \code{prop_event_network} \tab The proportion of observed events in the
-#'    network. When the outcome is continuous, this element is omitted. \cr
-#'    \tab \cr
-#'    \code{trial_zero_event} \tab The number of trials with at least one arm
-#'    with zero events. When the outcome is continuous, this element is
-#'    omitted. \cr
-#'    \tab \cr
-#'    \code{trial_all_zero_event} \tab The number of trials with zero events in
-#'    all arms. When the outcome is continuous, this element is omitted. \cr
-#'   }
+#'   \item{direct_comp}{The number of observed comparisons in the network.}
+#'   \item{two_arm_ns}{The number of two-arm trials in the network.}
+#'   \item{multi_arm_ns}{The number of multi-arm trials in the network.}
+#'   \item{total_rand_network}{The total number of randomised participants
+#'   in the network.}
+#'   \item{prop_obs_network}{The proportion of participants who completed
+#'   the trial.}
+#'   \item{prop_event_network}{The proportion of observed events in the
+#'   network. When the outcome is continuous, this element is omitted.}
+#'   \item{trial_zero_event}{The number of trials with at least one arm
+#'   with zero events. When the outcome is continuous, this element is
+#'   omitted.}
+#'   \item{trial_all_zero_event}{The number of trials with zero events in
+#'   all arms. When the outcome is continuous, this element is omitted.}
 #'
-#'   The two data-frames include\code{table_interventions} and
+#'   The two data-frames include \code{table_interventions} and
 #'   \code{table_comparisons}. See 'Value' in \code{\link{netplot}} for these
 #'   data-frames.
 #'
@@ -51,12 +40,18 @@
 #' facilitate the calculations.
 #'
 #' @seealso \code{\link{data_preparation}}, \code{\link{netplot}},
-#'   \code{\link{run_model}},
+#'   \code{\link{run_model}}
 #'
 #' @author {Loukia M. Spineli}
 #'
 #' @export
 describe_network <- function(data, drug_names, measure) {
+
+  drug_names <- if (missing(drug_names)) {
+    stop("The argument 'drug_names' has not been defined.", call. = FALSE)
+  } else {
+    drug_names
+  }
 
   # Use the 'data_preparation' function
   dat <- data_preparation(data, measure)
@@ -77,7 +72,7 @@ describe_network <- function(data, drug_names, measure) {
 
   # Proportion of completers per intervention (in %)
   prop_obs_partic_interv <- round(total_obs_partic_interv /
-                                    total_rand_partic_interv, 2) * 100
+                                  total_rand_partic_interv, 2) * 100
 
   # Proportion of missing outcome data (MOD) per intervention (in %)
   prop_mod_interv <- 100 - prop_obs_partic_interv
@@ -193,7 +188,7 @@ describe_network <- function(data, drug_names, measure) {
                                   "Median missing (%)",
                                   "Max. missing (%)")
 
-  if (measure == "OR") {
+  if (is.element(measure, c("OR", "RR", "RD"))) {
     # Proportion of observed events per trial-arm
     arm_risk <- dat$r / (dat$N - dat$m)
 
@@ -278,62 +273,46 @@ describe_network <- function(data, drug_names, measure) {
                                      by = list(comp), max)[, 2], 2) * 100
   }
 
-  if (measure == "OR") {
-    # Tabulate summary statistics per intervention
-    table_interv <- data.frame(drug_names,
-                               as.data.frame(table(unlist(dat$t)))[, 2],
-                               total_rand_partic_interv,
-                               prop_obs_partic_interv,
-                               total_risk_interv,
-                               min_risk_interv,
-                               median_risk_interv,
-                               max_risk_interv)
-    colnames(table_interv) <- c("Interventions",
-                                "Total trials",
-                                "Total randomised",
-                                "Completers (%)",
-                                "Total events (%)",
-                                "Min. events (%)",
-                                "Median events (%)",
-                                "Max. events (%)")
-
-    # Tabulate summary statistics per observed comparison
-    table_comp <- data.frame(as.data.frame(table(comp))[, 1],
-                             as.data.frame(table(comp))[, 2],
-                             total_rand_partic_comp,
-                             prop_obs_partic_comp,
-                             total_risk_comp,
-                             min_risk_comp,
-                             median_risk_comp,
-                             max_risk_comp)
-    colnames(table_comp) <- c("Comparisons",
-                              "Total trials",
-                              "Total randomised",
-                              "Completers (%)",
-                              "Total events (%)",
-                              "Min. events (%)",
-                              "Median events (%)",
-                              "Max. events (%)")
-  } else {
-    # Tabulate summary statistics per intervention
-    table_interv <- data.frame(drug_names,
-                               as.data.frame(table(unlist(dat$t)))[, 2],
-                               total_rand_partic_interv,
-                               prop_obs_partic_interv)
-    colnames(table_interv) <- c("Interventions",
-                                "Total trials",
-                                "Total randomised",
-                                "Completers (%)")
-
-    # Tabulate summary statistics per observed comparison
-    table_comp <- data.frame(as.data.frame(table(comp))[, 1],
-                             as.data.frame(table(comp))[, 2],
-                             total_rand_partic_comp,
-                             prop_obs_partic_comp)
-    colnames(table_comp) <- c("Comparisons",
+  # Tabulate summary statistics per intervention
+  table_interv <- data.frame(drug_names,
+                             as.data.frame(table(unlist(dat$t)))[, 2],
+                             total_rand_partic_interv,
+                             prop_obs_partic_interv)
+  colnames(table_interv) <- c("Interventions",
                               "Total trials",
                               "Total randomised",
                               "Completers (%)")
+
+  if (is.element(measure, c("OR", "RR", "RD"))) {
+    table_interv <- cbind(table_interv, data.frame(total_risk_interv,
+                                                   min_risk_interv,
+                                                   median_risk_interv,
+                                                   max_risk_interv))
+    colnames(table_interv)[5:8] <- c("Total events (%)",
+                                     "Min. events (%)",
+                                     "Median events (%)",
+                                     "Max. events (%)")
+  }
+
+  # Tabulate summary statistics per observed comparison
+  table_comp <- data.frame(as.data.frame(table(comp))[, 1],
+                           as.data.frame(table(comp))[, 2],
+                           total_rand_partic_comp,
+                           prop_obs_partic_comp)
+  colnames(table_comp) <- c("Comparisons",
+                            "Total trials",
+                            "Total randomised",
+                            "Completers (%)")
+
+  if (is.element(measure, c("OR", "RR", "RD"))) {
+    table_comp <- cbind(table_comp, data.frame(total_risk_comp,
+                                               min_risk_comp,
+                                               median_risk_comp,
+                                               max_risk_comp))
+    colnames(table_comp)[5:8] <- c("Total events (%)",
+                                   "Min. events (%)",
+                                   "Median events (%)",
+                                   "Max. events (%)")
   }
 
   results <- list(direct_comp = direct_comp,
@@ -345,13 +324,10 @@ describe_network <- function(data, drug_names, measure) {
                   table_comparisons = table_comp)
 
 
-  if (measure == "OR") {
-    results <- append(results,
-                      list(prop_event_network = prop_event_network,
-                           trial_zero_event = trial_zero_event,
-                           trial_all_zero_event = trial_all_zero_event))
-  } else {
-    results
+  if (is.element(measure, c("OR", "RR", "RD"))) {
+    results <- append(results, list(prop_event_network = prop_event_network,
+                               trial_zero_event = trial_zero_event,
+                               trial_all_zero_event = trial_all_zero_event))
   }
 
   return(results)

@@ -7,63 +7,59 @@
 mcmc_diagnostics(net, par = NULL)
 }
 \arguments{
-\item{net}{An object of S3 class \code{\link{run_model}},
-\code{\link{run_series_meta}}, \code{\link{run_nodesplit}},
-\code{\link{run_ume}}, \code{\link{run_sensitivity}} and
-\code{\link{run_metareg}}. See 'Value' in the functions above.}
+\item{net}{An object of S3 class \code{\link{run_metareg}},
+\code{\link{run_model}}, \code{\link{run_nodesplit}},
+\code{\link{run_sensitivity}}, \code{\link{run_series_meta}}, and
+\code{\link{run_ume}}. See 'Value' in the functions above.}
 
 \item{par}{A vector of three character strings that refer to three monitored
 parameters in \code{jagsfit} which is an object of S3 class
-\code{\link{run_model}}, \code{\link{run_ume}} and
-\code{\link{run_metareg}}. These three selected parameters will be
+\code{\link{run_metareg}}, \code{\link{run_model}}, and
+\code{\link{run_ume}}. These three selected parameters will be
 considered in the diagnostic plots (see 'Value'). This argument will be
-ignored for objects of S3 class \code{\link{run_series_meta}},
-\code{\link{run_nodesplit}}, or \code{\link{run_sensitivity}}.}
+ignored for objects of S3 class \code{\link{run_nodesplit}},
+\code{\link{run_sensitivity}}, and \code{\link{run_series_meta}}.}
 }
 \value{
 \code{mcmc_diagnostics} returns a data-frame that contains the
-  Gelman-Rubin convergence diagnostic, R-hat, and convergence status of the
-  following monitored parameters:
-  \tabular{ll}{
-   \code{EM} \tab The estimated summary effect measure.\cr
-   \tab \cr
-   \code{EM_pred} \tab The predicted summary effect measure.\cr
-   \tab \cr
-   \code{delta} \tab The estimated trial-specific effect measure.\cr
-   \tab \cr
-   \code{tau} \tab The between-trial standard deviation.\cr
-   \tab \cr
-   \code{direct} \tab The direct estimate of the split node
-   (see 'Value' in \code{\link{run_nodesplit}}).\cr
-   \tab \cr
-   \code{indirect} \tab The indirect estimate of the split node
-   (see 'Value' in \code{\link{run_nodesplit}}).\cr
-   \tab \cr
-   \code{IF} \tab The inconsistency factor of the split node
-   (see 'Value' in \code{\link{run_nodesplit}}).\cr
-   \tab \cr
-   \code{phi} \tab The informative missingness parameter.\cr
-   \tab \cr
-   \code{beta} \tab The regression coefficient.\cr
-  }
-  \code{mcmc_diagnostics} also uses the \code{\link[mcmcplots]{mcmcplot}}
-  function to create an HTML file with a panel of diagnostic plots
-  (trace, density, and autocorrelation) for each monitored parameter.
+  Gelman-Rubin convergence diagnostic, \strong{R-hat}, the MCMC error, and
+  the convergence status of the following monitored parameters:
+  \code{EM} {The estimated summary effect measure.}
+  \code{EM_pred} {The predicted summary effect measure.}
+  \code{delta} {The estimated trial-specific effect measure.}
+  \code{tau} {The between-trial standard deviation.}
+  \code{direct} {The direct estimate of the split node (see 'Value' in
+  \code{\link{run_nodesplit}}).}
+  \code{indirect} {The indirect estimate of the split node
+  (see 'Value' in \code{\link{run_nodesplit}}).}
+  \code{diff} {The inconsistency factor of the split node (see 'Value' in
+  \code{\link{run_nodesplit}}).}
+  \code{phi} {The informative missingness parameter.}
+  \code{beta} {The regression coefficient.}
+
+  \code{mcmc_diagnostics} also uses the
+  \code{\link[mcmcplots:mcmcplot]{mcmcplot}} function of the R-package
+  \href{https://CRAN.R-project.org/package=mcmcplots}{mcmcplots} to create an
+  HTML file with a panel of diagnostic plots (trace, density, and
+  autocorrelation) for each monitored parameter.
 }
 \description{
 Evaluates whether convergence has been achieved for the
   monitored parameters of the Bayesian models. The Gelman-Rubin convergence
-  diagnostic and relevant diagnostic plots are applied.
+  diagnostic, the Markov Chain Monte Carl (MCMC) error and relevant
+  diagnostic plots are applied.
 }
 \details{
 For each monitored parameter, \code{mcmc_diagnostics} considers the
-  maximum R-hat and compares it with the threshold 1.1: convergence is
-  achieved for the monitored parameter, when the maximum R-hat is below that
-  threshold; otherwise, the Markov Chain Monte Carlo algorithm has not
-  converged for that parameter. If the monitored parameter is a vector with
-  the posterior results, there is only one R-hat. If the monitored parameter
-  is a matrix of the posterior results, there are as many R-hats as the
-  number of rows for that parameter.
+  maximum R-hat and MCMC error and compares them with the thresholds 1.1
+  and 5\%, respectively. Convergence is achieved for the monitored parameter,
+  when the maximum R-hat and MCMC error are below the corresponding
+  thresholds; otherwise, the MCMC algorithm has not converged for that
+  parameter. If the monitored parameter is a vector with the posterior
+  results, there is only one R-hat and one MCMC error. If the monitored
+  parameter is a matrix of the posterior results, there are as many R-hats
+  and MCMC errors as the number of rows for that parameter. In that case, the
+  maximum R-hat and MCMC error are considered.
 }
 \examples{
 data("nma.baker2009")
@@ -71,20 +67,21 @@ data("nma.baker2009")
 # Read results from 'run_nodesplit' (using the default arguments)
 res <- readRDS(system.file('extdata/node_baker.rds', package = 'rnmamod'))
 
-# Obtain the diagnostic plots and check convergence based on R-hat
+# Check convergence based on R-hat
 mcmc_diagnostics(net = res,
                  par = c("tau", "EM[2,1]", "EM.pred[2,1]"))
 
 }
 \references{
 Gelman, A, Rubin, DB. Inference from iterative simulation using multiple
-sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+doi: 10.1214/ss/1177011136
 }
 \seealso{
-\code{\link[mcmcplots]{mcmcplot}}, \code{\link{run_metareg}},
-  \code{\link{run_model}}, \code{\link{run_nodesplit}},
-  \code{\link{run_sensitivity}}, \code{\link{run_series_meta}},
-  \code{\link{run_ume}}
+\code{\link[mcmcplots:mcmcplot]{mcmcplot}},
+  \code{\link{run_metareg}}, \code{\link{run_model}},
+  \code{\link{run_nodesplit}}, \code{\link{run_sensitivity}},
+  \code{\link{run_series_meta}}, \code{\link{run_ume}}
 }
 \author{
 {Loukia M. Spineli}

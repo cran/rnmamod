@@ -1,16 +1,16 @@
 #' Scatterplot of SUCRA values
 #'
-#' @description Creates a scatterplot to compare the SUCRA values from the
-#'   network meta-analysis and the network meta-regression
-#'   for a specific level or value of the investigated covariate.
+#' @description Creates a scatterplot of the SUCRA values from the
+#'   network meta-analysis and the network meta-regression for a specified level
+#'   or value of the investigated covariate.
 #'
 #' @param full An object of S3 class \code{\link{run_model}}.
 #'   See 'Value' in \code{\link{run_model}}.
 #' @param reg An object of S3 class \code{\link{run_metareg}}. See 'Value' in
 #'   \code{\link{run_metareg}}.
-#' @param cov_value A list of two elements in the following order: a number
+#' @param cov_value A list of two elements in the following order: 1) a number
 #'   for the covariate value of interest (see 'Arguments' in
-#'   \code{\link{run_metareg}}), and a character to indicate the name of
+#'   \code{\link{run_metareg}}), and 2) a character to indicate the name of
 #'   the covariate. See also 'Details'.
 #' @param drug_names A vector of labels with the name of the interventions in
 #'   the order they appear in the argument \code{data} of
@@ -20,13 +20,12 @@
 #'
 #' @return A scatterplot of the SUCRA values under the network meta-analysis
 #'   (y-axis) against the SUCRA values under the network meta-regression
-#'   (x-axis) for a specific level or value of the investigated covariate.
-
+#'   (x-axis) for a specified level or value of the investigated covariate.
 #'
 #' @details The names of the interventions appear above each point in the plot.
-#'   Three coloured rectangles appear in the scatterplot: a red rectangle for
-#'   SUCRA values up to 50\%, a yellow rectangular refer to SUCRA values between
-#'   50% and 80%, and a green rectangle for SUCRA values over 80\%.
+#'   Three coloured rectangles are drawn in the scatterplot: a red rectangle for
+#'   SUCRA values up to 50\%, a yellow rectangular for SUCRA values between
+#'   50\% and 80\%, and a green rectangle for SUCRA values over 80\%.
 #'   Interventions falling at the green area are considered as the highest
 #'   ranked interventions, whilst interventions falling at the red area are
 #'   considered as the lowest ranked interventions.
@@ -35,19 +34,22 @@
 #'   \code{cov_value} the name of the level for which the scatterplot will be
 #'   created.
 #'
+#'   \code{scatterplot_sucra} is integrated in \code{\link{metareg_plot}}.
+#'
 #'   \code{scatterplot_sucra} can be used only for a network of interventions.
 #'   Otherwise, the execution of the function will be stopped and an error
 #'   message will be printed on the R console.
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{run_metareg}}, \code{\link{run_model}}
+#' @seealso \code{\link{metareg_plot}}, \code{\link{run_metareg}},
+#'   \code{\link{run_model}}
 #'
 #' @references
 #' Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 #' for presenting results from multiple-treatment meta-analysis: an overview and
 #' tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-#' [\doi{10.1016/j.jclinepi.2010.03.016}]
+#' doi: 10.1016/j.jclinepi.2010.03.016
 #'
 #' @export
 scatterplot_sucra <- function(full, reg, cov_value, drug_names) {
@@ -96,6 +98,8 @@ scatterplot_sucra <- function(full, reg, cov_value, drug_names) {
     cov_value[[1]] - mean(reg$covariate)
   }
 
+  sucra_full <- full$SUCRA
+
   #Source: https://rdrr.io/github/nfultz/stackoverflow/man/reflect_triangle.html
   reflect_triangle <- function(m, from = c("lower", "upper")) {
     ix <- switch(match.arg(from),
@@ -105,7 +109,7 @@ scatterplot_sucra <- function(full, reg, cov_value, drug_names) {
     m
   }
 
-  sucra_nma <- round(full$SUCRA[, 1] * 100, 0)
+  sucra_nma <- round(sucra_full[, 1] * 100, 0)
   par_mean <- reg$EM[, 1] + reg$beta_all[, 1] * covar
   par_sd <- sqrt(((reg$EM[, 2])^2) + ((reg$beta_all[, 2] * covar)^2))
   z_test <- par_mean / par_sd

@@ -6,13 +6,11 @@
 #'
 #' @param full An object of S3 class \code{\link{run_model}}. See 'Value' in
 #'   \code{\link{run_model}}.
-#' @param compar A character to indicate the comparator intervention. it must be
+#' @param compar A character to indicate the comparator intervention. It must be
 #'   any name found in \code{drug_names}.
 #' @param drug_names A vector of labels with the name of the interventions in
 #'   the order they appear in the argument \code{data} of
-#'   \code{\link{run_model}}. If the argument \code{drug_names} is not defined,
-#'   the order of the interventions as they appear in \code{data} is used,
-#'   instead.
+#'   \code{\link{run_model}}.
 #'
 #' @return A panel of two forest plots: (1) a forest plot on the effect
 #'   estimates and predictions of comparisons with the selected intervention in
@@ -27,13 +25,19 @@
 #'   prediction intervals are displayed as overlapping lines in different
 #'   colours. The corresponding numerical results are displayed above each line:
 #'   95\% credible intervals are found in parentheses, and 95\% predictive
-#'   intervals are found in brackets. Odds ratios and ratio of means are
-#'   reported in the original scale after exponentiation of the logarithmic
-#'   scale.
+#'   intervals are found in brackets. Odds ratios, relative risks, and ratio of
+#'   means are reported in the original scale after exponentiation of the
+#'   logarithmic scale.
 #'
 #'   The y-axis for the forest plot on the SUCRA values displays the
 #'   labels of the interventions in the network.
 #'   The corresponding numerical results are displayed above each line.
+#'   Three coloured rectangles appear in the forest plot: a red rectangle for
+#'   SUCRA values up to 50\%, a yellow rectangular for SUCRA values between
+#'   50\% and 80\%, and a green rectangle for SUCRA values over 80\%.
+#'   Interventions falling at the green area are considered as the highest
+#'   ranked interventions, whilst interventions falling at the red area are
+#'   considered as the lowest ranked interventions.
 #'
 #'   In both plots, the interventions are sorted in descending order of their
 #'   SUCRA values.
@@ -50,7 +54,7 @@
 #' Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 #' for presenting results from multiple-treatment meta-analysis: an overview and
 #' tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-#' \doi{10.1016/j.jclinepi.2010.03.016}
+#' doi: 10.1016/j.jclinepi.2010.03.016
 #'
 #' @examples
 #' data("nma.liu2013")
@@ -66,30 +70,35 @@
 #' reuptake inhibitor", "serotonin reuptake inhibitor", "tricyclic
 #' antidepressant", "pergolide")
 #'
-#' # Create the league heatmap
+#' # Create the forest plot
 #' forestplot(full = res,
 #'            compar = "placebo",
 #'            drug_names = interv_names)
 #'
 #' @export
-forestplot <- function(full, compar,  drug_names) {
+forestplot <- function(full, compar, drug_names) {
+
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
 
   drug_names <- if (missing(drug_names)) {
-    stop("The argument 'drug_names' has not been defined",
+    stop("The argument 'drug_names' has not been defined.",
          call. = FALSE)
   } else {
     drug_names
   }
 
   if (length(drug_names) == 2) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
   compar <- if (missing(compar)) {
-    stop("The argument 'compar' has not been defined", call. = F)
+    stop("The argument 'compar' has not been defined.", call. = F)
   } else if (!is.element(compar, drug_names)) {
-    stop("The value of 'compar' is not found in the argument 'drug_names'",
+    stop("The value of 'compar' is not found in the argument 'drug_names'.",
          call. = FALSE)
   } else if (is.element(compar, drug_names)) {
     compar
@@ -102,7 +111,7 @@ forestplot <- function(full, compar,  drug_names) {
                                 comp = t(combn(drug_names, 2))[, 2])
   poss_pair_comp  <- rbind(poss_pair_comp1, poss_pair_comp2)
 
-  measure <- effect_measure_name(full$measure)
+  measure <- full$measure
   model <- full$model
   sucra <- full$SUCRA
   em_ref00 <- cbind(rbind(data.frame(mean = full$EM[, 1],
@@ -146,7 +155,7 @@ forestplot <- function(full, compar,  drug_names) {
 
   # Create a data-frame with credible and prediction intervals of comparisons
   # with the reference intervention
-  if (!is.element(measure, c("Odds ratio", "Ratio of means")) & model == "RE") {
+  if (!is.element(measure, c("OR", "RR", "ROM")) & model == "RE") {
     prepare_em <- data.frame(as.factor(rep(rev(seq_len(len_drug_names)), 2)),
                              rep(drug_names_sorted, 2),
                              round(rbind(em_ref, pred_ref), 2),
@@ -156,7 +165,7 @@ forestplot <- function(full, compar,  drug_names) {
                               "comparison",
                               "mean", "lower", "upper",
                               "interval")
-  } else if (is.element(measure, c("Odds ratio", "Ratio of means")) &
+  } else if (is.element(measure, c("OR", "RR", "ROM")) &
              model == "RE") {
     prepare_em <- data.frame(as.factor(rep(rev(seq_len(len_drug_names)), 2)),
                              rep(drug_names_sorted, 2),
@@ -167,7 +176,7 @@ forestplot <- function(full, compar,  drug_names) {
                               "comparison",
                               "mean", "lower", "upper",
                               "interval")
-  } else if (!is.element(measure, c("Odds ratio", "Ratio of means")) &
+  } else if (!is.element(measure, c("OR", "RR", "ROM")) &
              model == "FE") {
     prepare_em <- data.frame(as.factor(rev(seq_len(len_drug_names))),
                              drug_names_sorted,
@@ -175,7 +184,7 @@ forestplot <- function(full, compar,  drug_names) {
     colnames(prepare_em) <- c("order",
                               "comparison",
                               "mean", "lower", "upper")
-  } else if (is.element(measure, c("Odds ratio", "Ratio of means")) &
+  } else if (is.element(measure, c("OR", "RR", "ROM")) &
              model == "FE") {
     prepare_em <- data.frame(as.factor(rev(seq_len(len_drug_names))),
                              drug_names_sorted,
@@ -197,22 +206,19 @@ forestplot <- function(full, compar,  drug_names) {
 
   # Forest plots on credible/prediction intervals of comparisons with the
   # reference
-  caption <- if (full$D == 0 & is.element(measure,
-                                          c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours the first arm; if",
-          measure, "> 1, favours", compar)
-  } else if (full$D == 1 & is.element(measure,
-                                      c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours", compar,
-          "; if", measure, "> 1, favours the first arm")
-  } else if (full$D == 0 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours the first arm; if",
-          measure, "> 0, favours", compar)
-  } else if (full$D == 1 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours", compar,
-          "; if", measure, "> 0, favours the first arm")
+  measure2 <- effect_measure_name(full$measure, lower = FALSE)
+  caption <- if (full$D == 0 & is.element(measure, c("OR", "RR", "ROM"))) {
+    paste(measure2, "< 1, favours the first arm.",
+          measure2, "> 1, favours", paste0(compar, "."))
+  } else if (full$D == 1 & is.element(measure, c("OR", "RR", "ROM"))) {
+    paste(measure2, "< 1, favours", compar,
+          ".", measure2, "> 1, favours the first arm.")
+  } else if (full$D == 0 & !is.element(measure, c("OR", "RR", "ROM"))) {
+    paste(measure2, "< 0, favours the first arm.",
+          measure2, "> 0, favours", paste0(compar, "."))
+  } else if (full$D == 1 & !is.element(measure, c("OR", "RR", "ROM"))) {
+    paste(measure2, "< 0, favours", compar,
+          ".", measure2, "> 0, favours the first arm.")
   }
 
   p1 <- if (model == "RE") {
@@ -223,9 +229,20 @@ forestplot <- function(full, compar,  drug_names) {
                ymin = lower,
                ymax = upper,
                colour = interval)) +
+      #annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0, ymax = 0.2,
+      #         fill = "grey70") +
+      #annotate("rect",xmin = -Inf, xmax = Inf, ymin = 0.2, ymax = 0.7,
+      #         fill = "grey85") +
+      #annotate("rect",xmin = -Inf, xmax = Inf, ymin = 0.7, ymax = 1.0,
+      #         fill = "white") +
+      #annotate("rect",xmin = -Inf, xmax = Inf, ymin = 1.0, ymax = 1.5,
+      #         fill = "white") +
+      #annotate("rect",xmin = -Inf, xmax = Inf, ymin = 1.5, ymax = 5.0,
+      #         fill = "grey85") +
+      #annotate("rect", xmin = -Inf, xmax = Inf, ymin = 5.0, ymax = Inf,
+      #         fill = "grey70") +
       geom_hline(yintercept = ifelse(!is.element(measure,
-                                                 c("Odds ratio",
-                                                   "Ratio of means")), 0, 1),
+                                                 c("OR", "RR", "ROM")), 0, 1),
                  lty = 1,
                  size = 1,
                  col = "grey60") +
@@ -272,30 +289,16 @@ forestplot <- function(full, compar,  drug_names) {
                 parse = FALSE,
                 position = position_dodge(width = 0.5),
                 inherit.aes = TRUE, na.rm = TRUE) +
-      #geom_text(aes(x = 0.45,
-      #              y = ifelse(is.element(measure,
-      #                                    c("Odds ratio", "Ratio of means")),
-      #                         0.2, -0.2),
-      #              label = ifelse(full$D == 0, "Favours first arm",
-      #                             paste("Favours", compar))),
-      #          size = 3.5, vjust = 0, hjust = 0, color = "black") +
-      #geom_text(aes(x = 0.45,
-      #              y = ifelse(is.element(measure,
-      #                                    c("Odds ratio", "Ratio of means")),
-      #                         1.2, 0.2),
-      #              label = ifelse(full$D == 0, paste("Favours", compar),
-      #                             "Favours first arm")),
-      #          size = 3.5, vjust = 0, hjust = 0, color = "black") +
-      labs(x = "", y = measure, colour = "Analysis", caption = caption) +
       scale_x_discrete(breaks = as.factor(seq_len(len_drug_names)),
                        labels = drug_names_sorted[rev(
                          seq_len(len_drug_names))]) +
+      scale_y_continuous(trans = ifelse(!is.element(
+        measure, c("OR", "RR", "ROM")), "identity", "log10")) +
       scale_color_manual(breaks = c("Credible interval", "Prediction interval"),
                          values = c("black", "#D55E00")) +
       geom_label(aes(x = order[is.na(mean)],
-                     y = ifelse(!is.element(measure,
-                                            c("Odds ratio", "Ratio of means")),
-                                -0.2, 0.65),
+                     y = ifelse(!is.element(measure, c("OR", "RR", "ROM")),
+                                0, 1), # -0.2, 0.65
                      hjust = 0,
                      vjust = 1,
                      label = "Comparator intervention"),
@@ -303,8 +306,7 @@ forestplot <- function(full, compar,  drug_names) {
                  colour = "black",
                  fontface = "plain",
                  size = 4) +
-      scale_y_continuous(trans = ifelse(!is.element(
-        measure, c("Odds ratio", "Ratio of means")), "identity", "log10")) +
+      labs(x = "", y = measure2, colour = "Analysis", caption = caption) +
       coord_flip() +
       theme_classic() +
        theme(axis.text.x = element_text(color = "black", size = 12),
@@ -312,19 +314,26 @@ forestplot <- function(full, compar,  drug_names) {
              axis.title.x = element_text(color = "black", face = "bold",
                                          size = 12),
              legend.position = "bottom",
-             legend.justification = c(0.23, 0),
              legend.text =  element_text(color = "black", size = 12),
-             legend.title = element_text(color = "black", face = "bold",
-                                         size = 12))
+             legend.title = element_blank(),
+             plot.caption = element_text(hjust = 0.01))
   } else {
     ggplot(data = prepare_em,
-           aes(x = order, y = mean, ymin = lower, ymax = upper)) +
+           aes(x = order,
+               y = mean,
+               ymin = lower,
+               ymax = upper)) +
       geom_hline(yintercept = ifelse(!is.element(
-        measure, c("Odds ratio", "Ratio of means")), 0, 1),
-        lty = 2, size = 1.3, col = "grey53") +
+        measure, c("OR", "RR", "ROM")), 0, 1),
+        lty = 2,
+        size = 1.3,
+        col = "grey53") +
       geom_linerange(size = 2, position = position_dodge(width = 0.5)) +
       geom_errorbar(data = prepare_em[seq_len(len_drug_names), ],
-                    aes(x = order, y = mean, ymin = lower, ymax = upper),
+                    aes(x = order,
+                        y = mean,
+                        ymin = lower,
+                        ymax = upper),
                     size = 2, position = position_dodge(width = 0.5),
                     colour = "black", width = 0.0) +
       geom_point(size = 1.5, colour = "white", stroke = 0.3,
@@ -344,29 +353,28 @@ forestplot <- function(full, compar,  drug_names) {
                 parse = FALSE,
                 position = position_dodge(width = 0.5), inherit.aes = TRUE,
                 na.rm = TRUE) +
-      #geom_text(aes(x = 0.45,
-      #              y = ifelse(is.element(
-      #                measure, c("Odds ratio", "Ratio of means")), 0.2, -0.2),
-      #              label = ifelse(full$D == 0, "Favours first arm",
-      #                             paste("Favours", compar))),
-      #          size = 3.5, vjust = 0, hjust = 0, color = "black") +
-      #geom_text(aes(x = 0.45, y = ifelse(is.element(
-      #  measure, c("Odds ratio", "Ratio of means")), 1.2, 0.2),
-      #  label = ifelse(full$D == 0, paste("Favours", compar),
-      #                 "Favours first arm")),
-      #          size = 3.5, vjust = 0, hjust = 0, color = "black") +
-      labs(x = "", y = measure, caption = caption) +
       scale_x_discrete(breaks = as.factor(seq_len(len_drug_names)),
                        labels = drug_names_sorted[rev(
                          seq_len(len_drug_names))]) +
       geom_label(aes(x = order[is.na(mean)],
                      y = ifelse(!is.element(
-                       measure, c("Odds ratio", "Ratio of means")), -0.2, 0.65),
+                       measure, c("OR", "RR", "ROM")), 0, 1), # -0.2, 0.65
                      hjust = 0, vjust = 1, label = "Comparator intervention"),
                  fill = "beige", colour = "black", fontface = "plain",
                  size = 4) +
       scale_y_continuous(trans = ifelse(!is.element(
-        measure, c("Odds ratio", "Ratio of means")), "identity", "log10")) +
+        measure, c("OR", "RR", "ROM")), "identity", "log10")) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.5,
+                    fill = "lowest"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 0.8,
+                    fill = "intermediate"),
+                alpha = 0.02) +
+      scale_fill_manual(name = " ",
+                        values = c("lowest" = "white",
+                                   "intermediate" = "white",
+                                   "highest" = "white")) +
+      labs(x = "", y = measure2, caption = caption) +
       coord_flip(clip = "off") +
       theme_classic() +
       theme(axis.text.x = element_text(color = "black", size = 12),
@@ -374,10 +382,10 @@ forestplot <- function(full, compar,  drug_names) {
             axis.title.x = element_text(color = "black", face = "bold",
                                         size = 12),
             legend.position = "bottom",
-            legend.justification = c(0.23, 0),
-            legend.text =  element_text(color = "black", size = 12),
-            legend.title =  element_text(color = "black", face = "bold",
-                                         size = 12))
+            legend.justification = c(0.13, 0), # 0.23
+            legend.text =  element_blank(),
+            legend.title = element_blank(),
+            plot.caption = element_text(hjust = 0.01))
   }
 
 
@@ -387,6 +395,15 @@ forestplot <- function(full, compar,  drug_names) {
                    y = mean,
                    ymin = lower,
                    ymax = upper)) +
+    geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.5,
+                  fill = "lowest"),
+              alpha = 0.02) +
+    geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 0.8,
+                  fill = "intermediate"),
+              alpha = 0.02) +
+    geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.8, ymax = 1.0,
+                  fill = "highest"),
+              alpha = 0.02) +
     geom_linerange(size = 2, position = position_dodge(width = 0.5)) +
     geom_point(size = 1.5, colour = "white", stroke = 0.3,
                position = position_dodge(width = 0.5)) +
@@ -401,7 +418,12 @@ forestplot <- function(full, compar,  drug_names) {
                         hjust = 0, vjust = -0.5),
               color = "black", size = 4.0, check_overlap = FALSE, parse = FALSE,
               position = position_dodge(width = 0.5), inherit.aes = TRUE) +
-    labs(x = "", y = "Surface under the cumulative ranking curve value") +
+    scale_fill_manual(name = "Ranked",
+                      values = c("lowest" = "#D55E00",
+                                 "intermediate" = "orange",
+                                 "highest" = "#009E73")) +
+    labs(x = "", y = "Surface under the cumulative ranking curve value",
+         caption = " ") +
     scale_x_discrete(breaks = as.factor(seq_len(len_drug_names)),
                      labels = prepare_sucra$intervention[rev(
                        seq_len(len_drug_names))]) +
@@ -411,12 +433,18 @@ forestplot <- function(full, compar,  drug_names) {
     theme(axis.text.x = element_text(color = "black", size = 12),
           axis.text.y = element_text(color = "black", size = 12),
           axis.title.x = element_text(color = "black", face = "bold",
-                                      size = 12))
+                                      size = 12),
+          legend.position = "bottom",
+          legend.text =  element_text(color = "black", size = 12),
+          legend.title =  element_text(color = "black", face = "bold",
+                                       size = 12))
 
   # Bring together both forest-plots
   forest_plots <- suppressWarnings(
-    ggarrange(p1, p2, nrow = 1, ncol = 2, labels = c("A)", "B)"),
-              common.legend = TRUE, legend = "bottom")
+    ggarrange(p1, p2 + guides(fill = guide_legend(override.aes =
+                                                    list(alpha = 0.4))),
+              nrow = 1, ncol = 2, labels = c("A)", "B)"),
+              common.legend = FALSE, legend = "bottom")
   )
 
   return(forest_plots)

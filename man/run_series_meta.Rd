@@ -11,43 +11,42 @@ run_series_meta(full, n_chains, n_iter, n_burnin, n_thin)
 \code{\link{run_model}}.}
 
 \item{n_chains}{Integer specifying the number of chains for the MCMC
-sampling; an argument of the \code{\link[R2jags]{jags}} function of the
-R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
+the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 2.}
 
 \item{n_iter}{Positive integer specifying the number of Markov chains for the
-MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function of
-the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
+of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 10000.}
 
 \item{n_burnin}{Positive integer specifying the number of iterations to
 discard at the beginning of the MCMC sampling; an argument of the
-\code{\link[R2jags]{jags}} function of the R-package
+\code{\link[R2jags:jags]{jags}} function of the R-package
 \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1000.}
 
 \item{n_thin}{Positive integer specifying the thinning rate for the MCMC
-sampling; an argument of the \code{\link[R2jags]{jags}} function of the
-R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
+the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1.}
 }
 \value{
 An R2jags output on the summaries of the posterior distribution, and
-  the Gelman-Rubin convergence diagnostic of the following monitored
-  parameters:
-  \tabular{ll}{
-   \code{EM} \tab The summary effect estimate (according to the argument
-   \code{measure} defined in \code{\link{run_model}}) of each observed
-   pairwise comparison with at least two trials in the network.\cr
-   \tab \cr
-   \code{tau} \tab The between-trial standard deviation for pairwise
-   comparisons with at least two trials, when the random-effects model has
-   been specified.\cr
-  }
+  the Gelman-Rubin convergence diagnostic (Gelman et al., 1992) of the
+  following monitored parameters:
+  \item{EM}{The summary effect estimate (according to the argument
+  \code{measure} defined in \code{\link{run_model}}) of each observed
+  pairwise comparison with at least two trials in the network.}
+  \item{tau}{The between-trial standard deviation for pairwise comparisons
+  with at least two trials, when the random-effects model has been
+  specified.}
+  \item{single}{A binary vector that indicates the comparisons in \code{EM}
+  with one trial.}
 }
 \description{
-Performs a Bayesian pairwise meta-analysis for each
- pairwise comparison with at least two trials in the network.
+Performs a Bayesian pairwise meta-analysis for each pairwise
+  comparison with at least two trials in the network.
 }
 \details{
 \code{run_series_meta} inherits the arguments \code{data},
@@ -58,14 +57,21 @@ Performs a Bayesian pairwise meta-analysis for each
   Therefore, the user needs first to apply \code{\link{run_model}}, and then
   use \code{run_series_meta} (see 'Examples').
 
+  For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+  (risk difference) in \code{\link{run_model}}, \code{run_series_meta}
+  currently performs a series of pairwise meta-analysis using the odds ratio
+  as effect measure for being the \strong{base-case} effect measure in
+  \code{\link{run_model}} for a binary outcome (see also 'Details' in
+  \code{\link{run_model}}).
+
   \code{run_series_meta} runs a series of Bayesian pairwise meta-analyses
   in \code{JAGS}. The progress of the simulation appears on the R console.
-  The number of times a pairwise meta-analysis is preformed is also printed
-  on the console (in red) and is equal to the number of  pairwise comparisons
-  observed in the network (see 'Examples').
+  The number of times the function is used is also printed on the console
+  (in red) and is equal to the number of  observed pairwise comparisons
+  in the network (see 'Examples').
 
   The output of \code{run_series_meta} is not end-user-ready. The
-  \code{\link{series_meta_plot}} function uses the output of
+  \code{\link{series_meta_plot}} function inherits the output of
   \code{run_series_meta} as an S3 object and processes it further to provide
   an end-user-ready output.
 
@@ -95,11 +101,12 @@ run_series_meta(full = res,
 }
 \references{
 Gelman A, Rubin DB. Inference from iterative simulation using multiple
-sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+doi: 10.1214/ss/1177011136
 }
 \seealso{
-\code{\link[R2jags]{jags}}, \code{\link{run_model}},
-  \code{\link{series_meta_plot}},
+\code{\link[R2jags:jags]{jags}},
+  \code{\link{run_model}}, \code{\link{series_meta_plot}}
 }
 \author{
 {Loukia M. Spineli}

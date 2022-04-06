@@ -1,72 +1,72 @@
 #' Perform the node-splitting approach
 #'
 #' @description
-#'   Performs the Bayesian node-splitting approach of Dias et al., (2010)
+#'   Performs the Bayesian node-splitting approach of Dias et al. (2010)
 #'   extended to address aggregate binary and continuous missing participant
-#'   outcome data via the pattern-mixture model (Spineli, 2019;
-#'   Spineli et al., 2021). This model offers a local evaluation of the
+#'   outcome data via the pattern-mixture model (Spineli et al., 2021;
+#'   Spineli, 2019). This model offers a local evaluation of the
 #'   plausibility of the consistency assumption in the network
 #'   (Dias et al., 2010).
 #'
 #' @param full An object of S3 class \code{\link{run_model}}.
 #'   See 'Value' in \code{\link{run_model}}.
 #' @param n_chains Positive integer specifying the number of chains for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 2.
 #' @param n_iter Positive integer specifying the number of Markov chains for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 10000.
 #' @param n_burnin Positive integer specifying the number of iterations to
 #'   discard at the beginning of the MCMC sampling; an argument of the
-#'   \code{\link[R2jags]{jags}} function of the R-package
+#'   \code{\link[R2jags:jags]{jags}} function of the R-package
 #'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1000.
 #' @param n_thin Positive integer specifying the thinning rate for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
 #'
 #' @return An R2jags output on the summaries of the posterior distribution,
 #'   and the Gelman-Rubin convergence diagnostic of the
 #'   following monitored parameters:
-#'   \tabular{ll}{
-#'    \code{direct} \tab The summary effect measure (according to the
-#'    argument \code{measure} defined in \code{\link{run_model}}) of each
-#'    split node based on the corresponding trials.\cr
-#'    \tab \cr
-#'    \code{indirect} \tab The indirect summary effect measure (according to the
-#'    argument \code{measure} defined in \code{\link{run_model}}) of each split
-#'    node based on the remaining network after removing (splitting) the
-#'    corresponding node.\cr
-#'    \tab \cr
-#'    \code{diff} \tab The inconsistency parameter for each split node
-#'    defined as the difference between the direct and indirect effect
-#'    of the corresponding split node.\cr
-#'    \tab \cr
-#'    \code{tau} \tab The between-trial standard deviation after
-#'    each split node, when the random-effects model has been specified.\cr
-#'   }
+#'   \item{direct}{The summary effect measure (according to the argument
+#'   \code{measure} defined in \code{\link{run_model}}) of each split node based
+#'   on the corresponding trials.}
+#'   \item{indirect}{The indirect summary effect measure (according to the
+#'   argument \code{measure} defined in \code{\link{run_model}}) of each split
+#'   node based on the remaining network after removing (splitting) the
+#'   corresponding node.}
+#'   \item{diff}{The inconsistency parameter for each split node defined as the
+#'   difference between the direct and indirect effect of the corresponding
+#'   split node.}
+#'   \item{tau}{The between-trial standard deviation after each split node, when
+#'   the random-effects model has been specified.}
 #'
 #'   Furthermore, the output includes the following element:
-#'   \tabular{ll}{
-#'    \code{model_assessment} \tab A data-frame on the measures of model
-#'    assessment after each split node: deviance information criterion,
-#'    total residual deviance, and number of effective parameters.\cr
-#'   }
+#'   \item{model_assessment}{A data-frame on the measures of model assessment
+#'   after each split node: deviance information criterion,
+#'   total residual deviance, and number of effective parameters.}
 #'
 #' @details \code{run_nodesplit} inherits the arguments \code{data},
 #'   \code{measure}, \code{model}, \code{assumption}, \code{heter_prior},
-#'   \code{mean_misspar}, and \code{var_misspar} from \code{\link{run_model}}
-#'   (now contained in the argument \code{full}). This prevents specifying
-#'   a different Bayesian model from that considered in \code{\link{run_model}}.
-#'   Therefore, the user needs first to apply \code{\link{run_model}}, and then
-#'   use \code{run_nodesplit} (see 'Examples').
+#'   \code{mean_misspar}, \code{var_misspar}, \code{ref}, and \code{indic} from
+#'   \code{\link{run_model}} (now contained in the argument \code{full}).
+#'   This prevents specifying a different Bayesian model from that considered
+#'   in \code{\link{run_model}}. Therefore, the user needs first to apply
+#'   \code{\link{run_model}}, and then use \code{run_nodesplit}
+#'   (see 'Examples').
+#'
+#'   For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+#'   (risk difference) in \code{\link{run_model}}, \code{run_nodesplit}
+#'   currently performs node-splitting using the odds ratio as effect measure
+#'   for being the \strong{base-case} effect measure in \code{\link{run_model}}
+#'   for a binary outcome (see also 'Details' in \code{\link{run_model}}).
 #'
 #'   To perform the Bayesian node-splitting approach, the
 #'   \code{\link{prepare_nodesplit}} function is called which contains the
-#'   WinBUGS code as written by Dias et al., (2010) for binomial and normal
+#'   WinBUGS code as written by Dias et al. (2010) for binomial and normal
 #'   likelihood to analyse binary and continuous outcome data, respectively.
 #'   \code{\link{prepare_nodesplit}} has been extended to incorporate the
 #'   pattern-mixture model with informative missingness parameters for binary
@@ -80,22 +80,22 @@
 #'   will be stopped and an error message will be printed on the R console.
 #'
 #'   \code{run_nodesplit} uses the
-#'   \code{\link[gemtc]{mtc.nodesplit.comparisons}} function of the
-#'   R-package \href{https://CRAN.R-project.org/package=gemtc}{gemtc}
+#'   \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=gemtc}{gemtc}
 #'   to obtain automatically the nodes to split based on the decision rule of
-#'   van Valkenhoef et al., (2016).
-#'   \code{run_nodesplit} uses the option (1) in van Valkenhoef et al., (2016)
+#'   van Valkenhoef et al. (2016).
+#'   \code{run_nodesplit} uses the option (1) in van Valkenhoef et al. (2016)
 #'   to parameterise multi-arm trials that contain the node-to-split.
-#'   In contrast, \code{\link[gemtc]{mtc.nodesplit.comparisons}} uses the option
-#'   (3) in van Valkenhoef et al., (2016).
+#'   In contrast,
+#'   \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}}
+#'   uses the option (3) in van Valkenhoef et al. (2016).
 #'   Option (1) keeps the baseline arm of the node-to-split in the corresponding
 #'   multi-arms. Option (3) excludes both arms of the node-to-split from the
-#'   corresponding multi-arm trials. Hence, the corresponding subnetworks
-#'   obtained after splitting the node differ, and by extend, the results of the
-#'   corresponding split nodes found in multi-arm trials.
+#'   corresponding multi-arm trials.
 #'
 #'   The output of \code{run_nodesplit} is not end-user-ready.
-#'   The \code{\link{nodesplit_plot}} function uses the output of
+#'   The \code{\link{nodesplit_plot}} function inherits the output of
 #'   \code{run_nodesplit} as an S3 object and processes it further to provide an
 #'   end-user-ready output.
 #'
@@ -105,33 +105,35 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link[R2jags]{jags}}, \code{\link[gemtc]{mtc.nodesplit}},
-#'   \code{\link[gemtc]{mtc.nodesplit.comparisons}},
+#' @seealso \code{\link[R2jags:jags]{jags}},
+#'   \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}},
 #'   \code{\link{nodesplit_plot}}, \code{\link{prepare_nodesplit}},
-#'   \code{\link{run_model}},
+#'   \code{\link{run_model}}
 #'
 #' @references
+#' Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
+#' treatment comparison meta-analysis.
+#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44.
+#' doi: 10.1002/sim.3767
+#'
+#' Gelman A, Rubin DB. Inference from iterative simulation using multiple
+#' sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+#' doi: 10.1214/ss/1177011136
+#'
 #' Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
 #' data in network meta-analysis: a one-stage pattern-mixture model approach.
-#' \emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
+#' \emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+#' doi: 10.1177/0962280220983544
 #'
 #' Spineli LM. An empirical comparison of Bayesian modelling strategies for
 #' missing binary outcome data in network meta-analysis.
 #' \emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
-#' \doi{10.1186/s12874-019-0731-y}
+#' doi: 10.1186/s12874-019-0731-y
 #'
 #' van Valkenhoef G, Dias S, Ades AE, Welton NJ. Automated generation of
 #' node-splitting models for assessment of inconsistency in network
 #' meta-analysis. \emph{Res Synth Methods} 2016;\bold{7}(1):80--93.
-#' \doi{10.1002/jrsm.1167}
-#'
-#' Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
-#' treatment comparison meta-analysis.
-#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44.
-#' \doi{10.1002/sim.3767}
-#'
-#' Gelman A, Rubin DB. Inference from iterative simulation using multiple
-#' sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+#' doi: 10.1002/jrsm.1167
 #'
 #' @examples
 #' data("nma.baker2009")
@@ -156,23 +158,58 @@ run_nodesplit <- function(full,
                           n_burnin,
                           n_thin) {
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_meta'.",
+         call. = FALSE)
+  }
+
   # Default arguments
   data <- full$data
-  measure <- full$measure
+  measure <- if (is.element(full$measure, c("RR", "RD"))) {
+    "OR"
+  } else {
+    full$measure
+  }
   model <- full$model
   assumption <- full$assumption
   heterog_prior <- full$heter_prior
   mean_misspar <- full$mean_misspar
   var_misspar <- full$var_misspar
-  n_chains <- ifelse(missing(n_chains), 2, n_chains)
-  n_iter <- ifelse(missing(n_iter), 10000, n_iter)
-  n_burnin <- ifelse(missing(n_burnin), 1000, n_burnin)
-  n_thin <- ifelse(missing(n_thin), 1, n_thin)
+  ref <- full$ref
+  indic <- full$indic
+  n_chains <- if (missing(n_chains)) {
+    2
+  } else if (n_chains < 1) {
+    stop("The argument 'n_chains' must be a positive integer.", call. = FALSE)
+  } else {
+    n_chains
+  }
+  n_iter <- if (missing(n_iter)) {
+    10000
+  } else if (n_iter < 1) {
+    stop("The argument 'n_iter' must be a positive integer.", call. = FALSE)
+  } else {
+    n_iter
+  }
+  n_burnin <- if (missing(n_burnin)) {
+    1000
+  } else if (n_burnin < 1) {
+    stop("The argument 'n_burnin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_burnin
+  }
+  n_thin <- if (missing(n_thin)) {
+    1
+  } else if (n_thin < 1) {
+    stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_thin
+  }
 
   # Prepare the dataset for the R2jags
   item <- data_preparation(data, measure)
   if (item$nt < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
@@ -222,6 +259,7 @@ run_nodesplit <- function(full,
   if (dim(splitting)[1] < 1) {
     stop("There is *no* loop to evaluate", call. = FALSE)
   } else {
+
     # Define node to split: AB=(1,2)
     pair <- if (dim(splitting)[1] == 1) {
       t(apply(as.matrix(splitting, ncol = 2), 2, as.numeric))
@@ -298,7 +336,8 @@ run_nodesplit <- function(full,
                             "na" = na..,
                             "nt" = item$nt,
                             "ns" = item$ns,
-                            "ref" = item$ref,
+                            "ref" = ref,
+                            "indic" = indic,
                             "I" = item$I,
                             "I.sign" = I_sign[[i]],
                             "split" = checkPair_node[[i]][, "split"],
@@ -508,12 +547,22 @@ run_nodesplit <- function(full,
          indirect = EM,
          diff = diff,
          tau = tau,
-         model_assessment = model_assessment)
+         model_assessment = model_assessment,
+         n_chains = n_chains,
+         n_iter = n_iter,
+         n_burnin = n_burnin,
+         n_thin = n_thin,
+         type = "node")
   } else {
     list(direct = direct,
          indirect = EM,
          diff = diff,
-         model_assessment = model_assessment)
+         model_assessment = model_assessment,
+         n_chains = n_chains,
+         n_iter = n_iter,
+         n_burnin = n_burnin,
+         n_thin = n_thin,
+         type = "node")
   }
 
   return(results)

@@ -1,7 +1,7 @@
 #' Barplot for the Kullback-Leibler divergence measure
 #'
-#' @description Produces a barplot with the Kullback-Leibler divergence (KLD)
-#'   measure from each re-analysis to the primary analysis for a pairwise
+#' @description Produces a barplot with the Kullback-Leibler divergence measure
+#'   from each re-analysis to the primary analysis for a pairwise
 #'   comparison. Currently, \code{kld_barplot} is used concerning the impact of
 #'   missing participant outcome data.
 #'
@@ -17,15 +17,15 @@
 #'   the order of the interventions as they appear in \code{data} is used,
 #'   instead.
 #'
-#' @return \code{kld_barplot} returns a panel of barplots on the KLD measure for
-#'   each re-analysis.
+#' @return \code{kld_barplot} returns a panel of barplots on the
+#'   Kullback-Leibler divergence measure for each re-analysis.
 #'
 #' @details \code{kld_barplot} uses the scenarios inherited by
 #'   \code{\link{robustness_index}} via the \code{\link{run_sensitivity}}
 #'   function. The scenarios for the missingness parameter (see 'Details' in
 #'   \code{\link{run_sensitivity}}) in the compared interventions are split to
 #'   \emph{Extreme}, \emph{Sceptical}, and \emph{Optimistic} following the
-#'   classification of Spineli et al., (2021). In each class, bars will green,
+#'   classification of Spineli et al. (2021). In each class, bars will green,
 #'   orange, and red colour refer to scenarios without distance, less distant,
 #'   and more distant from the primary analysis
 #'   (the missing-at-random assumption).
@@ -39,16 +39,15 @@
 #'
 #' @seealso \code{\link{robustness_index}}, \code{\link{run_model}},
 #'   \code{\link{run_sensitivity}}
-#'
+#
 #' @references
+#' Kullback S, Leibler RA. On information and sufficiency.
+#' \emph{Ann Math Stat} 1951;\bold{22}(1):79--86. doi: 10.1214/aoms/1177729694
+#'
 #' Spineli LM, Kalyvas C, Papadimitropoulou K. Quantifying the robustness of
 #' primary analysis results: A case study on missing outcome data in pairwise
 #' and network meta-analysis.
-#' \emph{Res Synth Methods} 2021;\bold{12}(4):475--490.
-#' \doi{10.1002/jrsm.1478}
-#'
-#' Kullback S, Leibler RA. On information and sufficiency.
-#' \emph{Ann Math Stat} 1951;\bold{22}(1):79--86.
+#' \emph{Res Synth Methods} 2021;\bold{12}(4):475--90. doi: 10.1002/jrsm.1478
 #'
 #' @examples
 #' data("pma.taylor2004")
@@ -59,18 +58,23 @@
 #'
 #' # Calculate the robustness index
 #' robust <- robustness_index(sens = res_sens,
-#'                            threshold = 0.28)
+#'                            threshold = 0.17)
 #'
 #' # The names of the interventions in the order they appear in the dataset
 #' interv_names <- c("placebo", "inositol")
 #'
-#' # Crate the barplot for the comparison 'tiotropium versus salmeterol'
+#' # Create the barplot for the comparison 'inositol versus placebo'
 #' kld_barplot(robust = robust,
 #'             compar = c("inositol", "placebo"),
 #'             drug_names = interv_names)
 #'
 #' @export
 kld_barplot <- function(robust, compar, drug_names) {
+
+  if (robust$type != "index" || is.null(robust$type)) {
+    stop("'robust' must be an object of S3 class 'robustness_index'.",
+         call. = FALSE)
+  }
 
   if (any(is.na(robust))) {
     aa <- "Missing participant outcome data have *not* been collected."
@@ -83,23 +87,23 @@ kld_barplot <- function(robust, compar, drug_names) {
   }
 
   drug_names <- if (missing(drug_names)) {
-    stop("The argument 'drug_names' has not been defined", call. = FALSE)
+    stop("The argument 'drug_names' has not been defined.", call. = FALSE)
   } else {
     drug_names
   }
 
   compar <- if (missing(compar)) {
-    stop("The argument 'compar' needs to be defined", call. = FALSE)
+    stop("The argument 'compar' needs to be defined.", call. = FALSE)
   } else if (length(drug_names) < 3 & missing(compar)) {
     c(drug_names[2], drug_names[1])
   } else if (!is.element(compar[1], drug_names) |
              !is.element(compar[2], drug_names)) {
-    stop("The value of 'compar' is not found in the argument 'drug_names'",
+    stop("The value of 'compar' is not found in the argument 'drug_names'.",
          call. = FALSE)
   } else if (is.element(compar[1], drug_names) &
              is.element(compar[2], drug_names) &
              match(compar[1], drug_names) < match(compar[2], drug_names)) {
-    stop("Re-arrange the order of the element in the argument 'compar'",
+    stop("Re-arrange the order of the elements in the argument 'compar'.",
          call. = FALSE)
   } else if (is.element(compar[1], drug_names) &
              is.element(compar[2], drug_names) &
@@ -119,12 +123,13 @@ kld_barplot <- function(robust, compar, drug_names) {
 
 
   # Define the scenarios
-  scenarios <- if (is.element(robust$measure, c("OR", "ROM"))) {
+  measure <- robust$measure
+  scenarios <- if (is.element(measure, c("OR", "ROM"))) {
     cbind(rep(as.character(fractions(exp(robust$scenarios))),
               each = length(robust$scenarios)),
           rep(as.character(fractions(exp(robust$scenarios))),
               times = length(robust$scenarios)))
-  } else if (is.element(robust$measure, c("MD", "SMD"))) {
+  } else if (!is.element(measure, c("OR", "ROM"))) {
     cbind(rep(robust$scenarios, each = length(robust$scenarios)),
           rep(robust$scenarios, times = length(robust$scenarios)))
   }
@@ -140,9 +145,6 @@ kld_barplot <- function(robust, compar, drug_names) {
            "more distant",
            ifelse(abs(ranked_scenarios[, 1] - ranked_scenarios[, 2]) == 1,
                   "less distant", "no distance"))
-
-
-
 
   # Characterise the scenarios to extreme, sceptical, and optimistic with
   # respect to their position from MAR

@@ -2,7 +2,7 @@
 % Please edit documentation in R/forestplot.metareg_function.R
 \name{forestplot_metareg}
 \alias{forestplot_metareg}
-\title{Comparator-specific forest-plot for network meta-regression}
+\title{Comparator-specific forest plot for network meta-regression}
 \usage{
 forestplot_metareg(full, reg, compar, cov_value, drug_names)
 }
@@ -37,24 +37,22 @@ A panel of two forest plots: (1) a forest plot on the estimated
 }
 \description{
 This function illustrates a forest plot of the posterior mean
-  and 95\% credible and predictive interval of comparisons with the selected
-  intervention of the network under the network meta-analysis and network
-  meta-regression.
+  and 95\% credible and prediction interval of comparisons with the selected
+  intervention of the network under the network meta-analysis \emph{and}
+  network meta-regression.
 }
 \details{
 In both plots, the y-axis displays all interventions in the
   network; the selected intervention that comprises the \code{compar} is
   indicated in the plot with a homonymous label. The numerical results are
   displayed above each line.
-  Odds ratio and ratio of means are reported in the original scale after
-  exponentiation of the logarithmic scale.
-
-  When the covariate is binary, specify in the second element of
-  \code{cov_value} the name of the level for which the forest plot will be
-  created.
+  Odds ratio, relative risks, and ratio of means are reported in the original
+  scale after exponentiation of the logarithmic scale.
 
   In both plots, the interventions are sorted in the descending order of
   their SUCRA values based on the network meta-analysis.
+
+  \code{forestplot_metareg} is integrated in \code{\link{metareg_plot}}.
 
   \code{forestplot} can be used only for a network of interventions. In the
   case of two interventions, the execution of the function will be stopped
@@ -64,10 +62,11 @@ In both plots, the y-axis displays all interventions in the
 Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 for presenting results from multiple-treatment meta-analysis: an overview and
 tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-\doi{10.1016/j.jclinepi.2010.03.016}
+doi: 10.1016/j.jclinepi.2010.03.016
 }
 \seealso{
-\code{\link{run_metareg}}, \code{\link{run_model}}
+\code{\link{metareg_plot}}, \code{\link{run_metareg}},
+  \code{\link{run_model}}
 }
 \author{
 {Loukia M. Spineli}

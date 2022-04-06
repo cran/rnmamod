@@ -28,68 +28,67 @@ the order of the interventions as they appear in \code{data} is used,
 instead.}
 
 \item{save_xls}{Logical to indicate whether to export the tabulated results
-to an 'xlsx' file (via the \code{\link[writexl]{write_xlsx}}
-function) to the working directory of the user. The default is \code{FALSE}
-(do not export).}
+to an 'xlsx' file (via the \code{\link[writexl:write_xlsx]{write_xlsx}}
+function of the R-package
+\href{https://CRAN.R-project.org/package=writexl}{writexl}) at the working
+directory of the user. The default is \code{FALSE} (do not export).}
 }
 \value{
 \code{metareg_plot} prints on the R console a message on the most
-  parsimonious model (if any) based on the deviance information criterion
-  (DIC; in red text). Furthermore, the function returns the following list of
-   elements:
-  \tabular{ll}{
-   \code{table_estimates} \tab The posterior mean, and 95\% credible interval
-   of the summary effect measure (according to the argument \code{measure}
-   defined in \code{\link{run_model}}) for each comparison with the selected
-   intervention under network meta-analysis and network meta-regression
-   based on the specified \code{cov_value}.\cr
-   \tab \cr
-   \code{table_predictions} \tab The posterior mean, and 95\% predictive
-   interval of the summary effect measure (according to the argument
-   \code{measure} defined in \code{\link{run_model}}) for each comparison
-   with the selected intervention under network meta-analysis and network
-   meta-regression based on the specified \code{cov_value}.\cr
-   \tab \cr
-   \code{table_model_assessment} \tab The DIC, total residual deviance,
-   number of effective parameters, and the posterior median and 95\% credible
-   interval of between-trial standard deviation (\emph{tau}) under each model
-   (Spiegelhalter et al., (2002)). When a fixed-effect model has been
-   performed, \code{metareg_plot} does not return results on tau.\cr
-   \tab \cr
-   \code{table_regression_coeffients} \tab The posterior mean and 95\%
-   credible interval of the regression coefficient(s).\cr
-   \tab \cr
-   \code{interval_plots} \tab The panel of forest-plots on the estimated and
-   predicted effect sizes of comparisons with the selected intervention under
-   network meta-analysis and network meta-regression based on the specified
-   \code{cov_value}. See 'Details' and 'Value' in
-   \code{\link{forestplot_metareg}}.\cr
-   \tab \cr
-   \code{sucra_scatterplot} \tab A scatterplot of the SUCRA values from the
-   network meta-analysis against the SUCRA values from the network
-   meta-regression based on the specified \code{cov_value}. See 'Details'
-   and 'Value' in \code{\link{scatterplot_sucra}}.
-}
+  parsimonious model (if any) based on the DIC (in red text). Furthermore,
+  the function returns the following list of elements:
+  \item{table_estimates}{The posterior mean, and 95\% credible interval
+  of the summary effect measure (according to the argument \code{measure}
+  defined in \code{\link{run_model}}) for each comparison with the selected
+  intervention under network meta-analysis and network meta-regression
+  based on the specified \code{cov_value}.}
+  \item{table_predictions}{The posterior mean, and 95\% prediction
+  interval of the summary effect measure (according to the argument
+  \code{measure} defined in \code{\link{run_model}}) for each comparison
+  with the selected intervention under network meta-analysis and network
+  meta-regression based on the specified \code{cov_value}.}
+  \item{table_model_assessment}{The DIC, total residual deviance,
+  number of effective parameters, and the posterior median and 95\% credible
+  interval of between-trial standard deviation (\emph{tau}) under each model
+  (Spiegelhalter et al., 2002). When a fixed-effect model has been
+  performed, \code{metareg_plot} does not return results on \emph{tau}. For a
+  binary outcome, the results refer to the odds ratio scale.}
+  \item{table_regression_coeffients}{The posterior mean and 95\%
+  credible interval of the regression coefficient(s) (according to the
+  argument \code{covar_assumption} defined in \code{\link{run_metareg}}).
+  For a binary outcome, the results refer to the odds ratio scale.}
+  \item{interval_plot}{A forest plot on the estimated and predicted effect
+  sizes of comparisons with the selected comparator intervention under
+  network meta-analysis and network meta-regression based on the specified
+  \code{cov_value}. See 'Details' and 'Value' in
+  \code{\link{forestplot_metareg}}.}
+  \item{sucra_scatterplot}{A scatterplot of the SUCRA values from the
+  network meta-analysis against the SUCRA values from the network
+  meta-regression based on the specified \code{cov_value}. See 'Details'
+  and 'Value' in \code{\link{scatterplot_sucra}}.}
 }
 \description{
 Illustrates the effect estimates, predictions and regression
-  coefficients of comparisons with a specific comparator and also exports
-  these results to an Excel format.
+  coefficients of comparisons with a specified comparator intervention
+  and also exports these results to an Excel file.
 }
 \details{
-The DIC of the network meta-analysis model is compared with the DIC
-  of the network meta-regression model. If the difference in DIC exceeds 5,
-  the network meta-regression model is preferred; if the difference in DIC is
-  less than -5, the network meta-analysis model is preferred; otherwise,
-  there is little to choose between the compared models.
+The deviance information criterion (DIC) of the network
+  meta-analysis model is compared with the DIC of the network meta-regression
+  model. If the difference in DIC exceeds 5, the network meta-regression
+  model is preferred; if the difference in DIC is less than -5, the network
+  meta-analysis model is preferred; otherwise, there is little to choose
+  between the compared models.
 
   When the covariate is binary, specify in the second element of
   \code{cov_value} the name of the level for which the output will be
   created.
 
   Furthermore, \code{metareg_plot} exports all tabulated results to separate
-  'xlsx' files (via the \code{\link[writexl]{write_xlsx}} function)
-  to the working directory of the user.
+  'xlsx' files (via the \code{\link[writexl:write_xlsx]{write_xlsx}} function
+  of the R-package
+  \href{https://CRAN.R-project.org/package=writexl}{writexl}) to the working
+  directory of the user.
 
   \code{metareg_plot} can be used only for a network of interventions. In the
   case of two interventions, the execution of the function will be stopped
@@ -126,16 +125,16 @@ metareg_plot(full = res,
 Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 for presenting results from multiple-treatment meta-analysis: an overview and
 tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-\doi{10.1016/j.jclinepi.2010.03.016}
+doi: 10.1016/j.jclinepi.2010.03.016
 
 Spiegelhalter DJ, Best NG, Carlin BP, van der Linde A. Bayesian measures of
-model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}:583--616.
-\doi{10.1111/1467-9868.00353}
+model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}(4):583--616.
+doi: 10.1111/1467-9868.00353
 }
 \seealso{
 \code{\link{forestplot_metareg}}, \code{\link{run_metareg}},
   \code{\link{run_model}}, \code{\link{scatterplot_sucra}},
-  \code{\link[writexl]{write_xlsx}}
+  \code{\link[writexl:write_xlsx]{write_xlsx}}
 }
 \author{
 {Loukia M. Spineli}

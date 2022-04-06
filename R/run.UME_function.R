@@ -1,70 +1,59 @@
 #' Perform the unrelated mean effects model
 #'
-#' @description Performs the unrelated mean effects model of Dias et al.,
-#'   (2013a) extended to address aggregate binary and continuous missing
-#'   participant outcome data via the pattern-mixture model (Spineli, 2019;
-#'   Spineli et al., 2021). This model offers a global evaluation of the
-#'   plausibility of the consistency assumption in the network
-#'   (Dias et al. (2013b)).
+#' @description Performs the unrelated mean effects model of Dias et al. (2013)
+#'   that has been refined (Spineli, 2021) and extended to address aggregate
+#'   binary and continuous missing participant outcome data via the
+#'   pattern-mixture model (Spineli et al. 2021; Spineli, 2019). This model
+#'   offers a global evaluation of the plausibility of the consistency
+#'   assumption in the network.
 #'
 #' @param full An object of S3 class \code{\link{run_model}}. See 'Value' in
 #'   \code{\link{run_model}}.
 #' @param n_chains Positive integer specifying the number of chains for the MCMC
-#'   sampling; an argument of the \code{\link[R2jags]{jags}} function of the
-#'   R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
+#'   the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 2.
 #' @param n_iter Positive integer specifying the number of Markov chains for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function of
-#'   the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
+#'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 10000.
 #' @param n_burnin Positive integer specifying the number of iterations to
 #'   discard at the beginning of the MCMC sampling; an argument of the
-#'   \code{\link[R2jags]{jags}} function of the R-package
+#'   \code{\link[R2jags:jags]{jags}} function of the R-package
 #'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1000.
 #' @param n_thin Positive integer specifying the thinning rate for the MCMC
-#'   sampling; an argument of the \code{\link[R2jags]{jags}} function of the
-#'   R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
+#'   the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
 #'
 #' @return An R2jags output on the summaries of the posterior distribution, and
-#'   the Gelman-Rubin convergence diagnostic of the following monitored
-#'   parameters:
-#'   \tabular{ll}{
-#'    \code{EM} \tab The summary effect estimate (according to the argument
-#'    \code{measure} defined in \code{\link{run_model}}) for each pairwise
-#'    comparison observed in the network.\cr
-#'    \tab \cr
-#'    \code{dev_o} \tab The deviance contribution of each trial-arm based on the
-#'    observed outcome.\cr
-#'    \tab \cr
-#'    \code{hat_par} \tab The fitted outcome at each trial-arm.\cr
-#'    \tab \cr
-#'    \code{tau} \tab The between-trial standard deviation (assumed common
-#'    across the observed pairwise comparisons) for the whole network, when a
-#'    random-effects model has been specified.\cr
-#'    \tab \cr
-#'    \code{m_tau} \tab The between-trial standard deviation (assumed common
-#'    across the observed pairwise comparisons) for the subset of multi-arm
-#'    trials, when a random-effects model has been specified.\cr
-#'   }
+#'   the Gelman-Rubin convergence diagnostic (Gelman et al., 1992) of the
+#'   following monitored parameters:
+#'   \item{EM}{The summary effect estimate (according to the argument
+#'   \code{measure} defined in \code{\link{run_model}}) for each pairwise
+#'   comparison observed in the network.}
+#'   \item{dev_o}{The deviance contribution of each trial-arm based on the
+#'   observed outcome.}
+#'   \item{hat_par}{The fitted outcome at each trial-arm.}
+#'   \item{tau}{The between-trial standard deviation (assumed common across the
+#'   observed pairwise comparisons) for the whole network, when a random-effects
+#'   model has been specified.}
+#'   \item{m_tau}{The between-trial standard deviation (assumed common
+#'   across the observed pairwise comparisons) for the subset of multi-arm
+#'   trials, when a random-effects model has been specified.}
 #'
 #'   The output also includes the following elements:
-#'   \tabular{ll}{
-#'    \code{leverage_o} \tab The leverage for the observed outcome at each
-#'    trial-arm.\cr
-#'    \tab \cr
-#'    \code{sign_dev_o} \tab The sign of the difference between observed and
-#'    fitted outcome at each trial-arm.\cr
-#'    \tab \cr
-#'    \code{model_assessment} \tab A data-frame on the measures of model
-#'    assessment: deviance information criterion, number of effective
-#'    parameters, and total residual deviance.\cr
-#'    \tab \cr
-#'    \code{jagsfit} \tab An object of S3 class \code{\link[R2jags]{jags}} with
-#'    the posterior results on all monitored parameters to be used in the
-#'    \code{\link{mcmc_diagnostics}} function.\cr
-#'   }
+#'   \item{leverage_o}{The leverage for the observed outcome at each trial-arm.}
+#'   \item{sign_dev_o}{The sign of the difference between observed and fitted
+#'   outcome at each trial-arm.}
+#'   \item{model_assessment}{A data-frame on the measures of model assessment:
+#'   deviance information criterion, number of effective parameters, and total
+#'   residual deviance.}
+#'   \item{jagsfit}{An object of S3 class \code{\link[R2jags:jags]{jags}} with
+#'   the posterior results on all monitored parameters to be used in the
+#'   \code{\link{mcmc_diagnostics}} function.}
+#'
 #'   Furthermore, \code{run_ume} returns a character vector with the pairwise
 #'   comparisons observed in the network, \code{obs_comp}, and a character
 #'   vector with comparisons between the non-baseline interventions observed in
@@ -73,30 +62,42 @@
 #'
 #' @details \code{run_ume} inherits the arguments \code{data},
 #'   \code{measure}, \code{model}, \code{assumption}, \code{heter_prior},
-#'   \code{mean_misspar}, and \code{var_misspar} from \code{\link{run_model}}.
+#'   \code{mean_misspar}, \code{var_misspar}, and \code{ref} from
+#'   \code{\link{run_model}}.
 #'   This prevents specifying a different Bayesian model from that considered in
 #'   \code{\link{run_model}}.Therefore, the user needs first to apply
-#'   \code{\link{run_model}}, and then usen\code{run_ume} (see 'Examples').
+#'   \code{\link{run_model}}, and then use \code{run_ume} (see 'Examples').
+#'
+#'   The \code{run_ume} function also returns the arguments \code{data},
+#'   \code{model}, \code{measure}, \code{assumption}, \code{n_chains},
+#'   \code{n_iter}, \code{n_burnin}, and \code{n_thin} as specified by the user
+#'   to be inherited by other relevant functions of the package.
 #'
 #'   Initially, \code{run_ume} calls the \code{\link{improved_ume}} function to
 #'   identify the \emph{frail comparisons}, that is, comparisons between
 #'   non-baseline interventions in multi-arm trials not investigated in any
-#'   two-arm trial of the network (Spineli, 2021). The 'original' model of
-#'   Dias et al., (2013a) omits the frail comparisons from the estimation
+#'   two-arm or multi-arm trial of the network (Spineli, 2021). The 'original'
+#'   model of Dias et al. (2013) omits the frail comparisons from the estimation
 #'   process. Consequently, the number of estimated summary effects is less
 #'   than those obtained by performing separate pairwise meta-analyses
 #'   (see \code{\link{run_series_meta}}).
 #'
+#'   For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+#'   (risk difference) in \code{\link{run_model}}, \code{run_ume} currently
+#'   considers the odds ratio as effect measure for being the \strong{base-case}
+#'   effect measure in \code{\link{run_model}} for a binary outcome
+#'   (see also 'Details' in \code{\link{run_model}}).
+#'
 #'   \code{run_ume} calls the \code{\link{prepare_ume}} function which contains
-#'   the WinBUGS code as written by Dias et al., (2013a) for binomial and normal
+#'   the WinBUGS code as written by Dias et al. (2013) for binomial and normal
 #'   likelihood to analyse binary and continuous outcome data, respectively.
 #'   \code{\link{prepare_ume}} has been extended to incorporate the
 #'   pattern-mixture model with informative missingness parameters for binary
 #'   and continuous outcome data (see 'Details' in \code{\link{run_model}}).
-#'   \code{\link{prepare_ume}} has been also refined to account for the
+#'   \code{\link{prepare_ume}} has also been refined to account for the
 #'   multi-arm trials by assigning conditional univariate normal distributions
-#'   on the basic parameters of these trials, that is, effect parameters between
-#'   non-baseline arms and the baseline arm (Dias et al., 2013b; Spineli, 2021).
+#'   on the underlying trial-specific effect size of comparisons with the
+#'   baseline arm of the multi-arm trial (Spineli, 2021).
 #'
 #'   \code{run_ume} runs Bayesian unrelated mean effects model in \code{JAGS}.
 #'   The progress of the simulation appears on the R console.
@@ -111,37 +112,34 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link[R2jags]{jags}}, \code{\link{prepare_ume}},
-#'   \code{\link{run_model}}, \code{\link{run_series_meta}},
-#'   \code{\link{ume_plot}}
+#' @seealso \code{\link[R2jags:jags]{jags}},
+#'   \code{\link{prepare_ume}}, \code{\link{run_model}},
+#'   \code{\link{run_series_meta}}, \code{\link{ume_plot}}
 #'
 #' @references
-#' Spineli LM. A novel framework to evaluate the consistency assumption globally
-#' in a network of interventions. \emph{submitted} 2021.
+#' Dias S, Welton NJ, Sutton AJ, Caldwell DM, Lu G, Ades AE. Evidence synthesis
+#' for decision making 4: inconsistency in networks of evidence based on
+#' randomized controlled trials.
+#' \emph{Med Decis Making} 2013;\bold{33}(5):641--56.
+#' doi: 10.1177/0272989X12455847
+#'
+#' Gelman A, Rubin DB. Inference from iterative simulation using multiple
+#' sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+#' doi: 10.1214/ss/1177011136
+#'
+#' Spineli LM. A Revised Framework to Evaluate the Consistency Assumption
+#' Globally in a Network of Interventions. \emph{Med Decis Making} 2021.
+#' doi: 10.1177/0272989X211068005
 #'
 #' Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
 #' data in network meta-analysis: a one-stage pattern-mixture model approach.
-#' \emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
+#' \emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+#' doi: 10.1177/0962280220983544
 #'
 #' Spineli LM. An empirical comparison of Bayesian modelling strategies for
 #' missing binary outcome data in network meta-analysis.
 #' \emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
-#' \doi{10.1186/s12874-019-0731-y}
-#'
-#' Dias S, Welton NJ, Sutton AJ, Caldwell DM, Lu G, Ades AE. Evidence synthesis
-#' for decision making 4: inconsistency in networks of evidence based on
-#' randomized controlled trials.
-#' \emph{Med Decis Making} 2013a;\bold{33}(5):641--56.
-#' \doi{10.1177/0272989X12455847}
-#'
-#' Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision
-#' making 2: a generalized linear modeling framework for pairwise and network
-#' meta-analysis of randomized controlled trials.
-#' \emph{Med Decis Making} 2013b;\bold{33}(5):607--617.
-#' \doi{10.1177/0272989X12458724}
-#'
-#' Gelman A, Rubin DB. Inference from iterative simulation using multiple
-#' sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+#' doi: 10.1186/s12874-019-0731-y
 #'
 #' @examples
 #' data("nma.liu2013")
@@ -163,27 +161,61 @@
 run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
 
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
+
   # Default arguments
   data <- full$data
-  measure <- full$measure
+  measure <- if (is.element(full$measure, c("RR", "RD"))) {
+    "OR"
+  } else {
+    full$measure
+  }
   model <- full$model
   assumption <- full$assumption
   heterog_prior <- full$heter_prior
   mean_misspar <- full$mean_misspar
   var_misspar <- full$var_misspar
+  ref <- full$ref
 
   # Prepare the dataset for the R2jags
   item <- data_preparation(data, measure)
   if (item$nt < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
   # Default arguments
-  n_chains <- ifelse(missing(n_chains), 2, n_chains)
-  n_iter <- ifelse(missing(n_iter), 10000, n_iter)
-  n_burnin <- ifelse(missing(n_burnin), 1000, n_burnin)
-  n_thin <- ifelse(missing(n_thin), 1, n_thin)
+  n_chains <- if (missing(n_chains)) {
+    2
+  } else if (n_chains < 1) {
+    stop("The argument 'n_chains' must be a positive integer.", call. = FALSE)
+  } else {
+    n_chains
+  }
+  n_iter <- if (missing(n_iter)) {
+    10000
+  } else if (n_iter < 1) {
+    stop("The argument 'n_iter' must be a positive integer.", call. = FALSE)
+  } else {
+    n_iter
+  }
+  n_burnin <- if (missing(n_burnin)) {
+    1000
+  } else if (n_burnin < 1) {
+    stop("The argument 'n_burnin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_burnin
+  }
+  n_thin <- if (missing(n_thin)) {
+    1
+  } else if (n_thin < 1) {
+    stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_thin
+  }
 
   # Move multi-arm trials at the bottom
   t <- item$t[order(item$na, na.last = TRUE), ]
@@ -305,7 +337,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
                    "ns" = ns,
                    "ref" = ifelse(is.element(assumption,
                                              c("HIE-ARM", "IDE-ARM")),
-                                  item$ref, NA),
+                                  ref, NA),
                    "I" = item$I[order(item$na, na.last = TRUE), ],
                    "t1" = t1_indic,
                    "t2" = t2_indic,
@@ -386,7 +418,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
   }
 
   # Run the Bayesian analysis
-  jagsfit <- jags(data = data_jag,
+  jagsfit <- suppressWarnings({jags(data = data_jag,
                   parameters.to.save = param_jags,
                   model.file = textConnection(prepare_ume(measure,
                                                           model,
@@ -397,6 +429,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
                   n.burnin = n_burnin,
                   n.thin = n_thin,
                   DIC = FALSE)
+  })
 
   # Turn summary of posterior results (R2jags object) into a data-frame
   # to select model parameters (using 'dplyr')
@@ -485,6 +518,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
          leverage_o = leverage_o,
          sign_dev_o = sign_dev_o,
          tau = tau,
+         m_tau = m_tau,
          model_assessment = model_assessment,
          obs_comp = obs_comp,
          jagsfit = jagsfit,
@@ -492,7 +526,12 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
          model = model,
          measure = measure,
          assumption = assumption,
-         phi = NULL)
+         phi = NULL,
+         n_chains = n_chains,
+         n_iter = n_iter,
+         n_burnin = n_burnin,
+         n_thin = n_thin,
+         type = "ume")
   } else {
     list(EM = EM,
          dev_o = dev_o,
@@ -506,7 +545,12 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
          model = model,
          measure = measure,
          assumption = assumption,
-         phi = NULL)
+         phi = NULL,
+         n_chains = n_chains,
+         n_iter = n_iter,
+         n_burnin = n_burnin,
+         n_thin = n_thin,
+         type = "ume")
   }
 
   # Return different list of results according to a condition

@@ -2,15 +2,18 @@
 % Please edit documentation in R/prepare.model_function.R
 \name{prepare_model}
 \alias{prepare_model}
-\title{WinBUGS code for Bayesian pairwise or network meta-analysis}
+\title{WinBUGS code for Bayesian pairwise or network meta-analysis and
+meta-regression}
 \usage{
 prepare_model(measure, model, covar_assumption, assumption)
 }
 \arguments{
-\item{measure}{Character string indicating the effect measure with values
-\code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-mean difference, standardised mean difference and ratio of means,
-respectively.}
+\item{measure}{Character string indicating the effect measure. For a binary
+outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+\code{"RD"} for the odds ratio, relative risk, and risk difference,
+respectively. For a continuous outcome, the following can be considered:
+\code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+standardised mean difference and ratio of means, respectively.}
 
 \item{model}{Character string indicating the analysis model with values
 \code{"RE"}, or \code{"FE"} for the random-effects and fixed-effect model,
@@ -19,8 +22,9 @@ respectively. The default argument is \code{"RE"}.}
 \item{covar_assumption}{Character string indicating the structure of the
 intervention-by-covariate interaction, as described in
 Cooper et al., (2009). Set \code{covar_assumption} equal to one of the
-following: \code{"NO"}, when no meta-regression is performed; otherwise,
-\code{"exchangeable"}, \code{"independent"}, and \code{"common"}.}
+following, when meta-regression is performed: \code{"exchangeable"},
+\code{"independent"}, and \code{"common"}. Assign \code{"NO"} to perform
+pairwise or network meta-analysis.}
 
 \item{assumption}{Character string indicating the structure of the
 informative missingness parameter. Set \code{assumption} equal to one of
@@ -34,50 +38,57 @@ uncorrelated, respectively.}
 }
 \value{
 An R character vector object to be passed to \code{\link{run_model}}
-  and \code{\link{run_metareg}}  through the
-  \code{\link[base]{textConnection}} function as the argument \code{object}.
+  and \code{\link{run_metareg}} through the
+  \code{\link[base:textConnection]{textConnection}} function as the argument
+  \code{object}.
 }
 \description{
-The WinBUGS code, as written by Dias et al., (2013) to run a one-stage
+The WinBUGS code, as written by Dias et al. (2013) to run a one-stage
   Bayesian network meta-analysis, extended to incorporate the pattern-mixture
-  model for binary or continuous missing participant outcome data. In the
-  case of two interventions, the code boils down to a one-stage Bayesian
-  pairwise meta-analysis with pattern-mixture model.
+  model for binary or continuous missing participant outcome data (Spineli
+  et al., 2021; Spineli, 2019). The model has been also extended to
+  incorporate a trial-level covariate to apply meta-regression
+  (Cooper et al., 2009). In the case of two interventions, the code boils
+  down to a one-stage Bayesian pairwise meta-analysis with pattern-mixture
+  model (Turner et al., 2015; Spineli et al, 2021).
 }
 \details{
 \code{prepare_model} creates the model in the JAGS dialect
   of the BUGS language. The output of this function constitutes the argument
-  \code{model.file} of \code{\link[R2jags]{jags}} via the
-  \code{\link[base]{textConnection}} function.
+  \code{model.file} of the \code{\link[R2jags:jags]{jags}} function (in the
+  R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}) via the
+  \code{\link[base:textConnection]{textConnection}} function.
 }
 \references{
-Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
-data in network meta-analysis: a one-stage pattern-mixture model approach.
-\emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
-
-Spineli LM. An empirical comparison of Bayesian modelling strategies for
-missing binary outcome data in network meta-analysis.
-\emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
-\doi{10.1186/s12874-019-0731-y}
-
-Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to account
-for uncertainty due to missing binary outcome data in pairwise meta-analysis.
-\emph{Stat Med} 2015;\bold{34}(12):2062--2080. \doi{10.1002/sim.6475}
-
-Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision
-making 2: a generalized linear modeling framework for pairwise and network
-meta-analysis of randomized controlled trials. \emph{Med Decis Making}
-2013;\bold{33}(5):607--617. \doi{10.1177/0272989X12458724}
-
 Cooper NJ, Sutton AJ, Morris D, Ades AE, Welton NJ. Addressing between-study
 heterogeneity and inconsistency in mixed treatment comparisons: Application
 to stroke prevention treatments in individuals with non-rheumatic atrial
 fibrillation. \emph{Stat Med} 2009;\bold{28}(14):1861--81.
-\doi{10.1002/sim.3594}
+doi: 10.1002/sim.3594
+
+Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision
+making 2: a generalized linear modeling framework for pairwise and network
+meta-analysis of randomized controlled trials. \emph{Med Decis Making}
+2013;\bold{33}(5):607--17. doi: 10.1177/0272989X12458724
+
+Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
+data in network meta-analysis: a one-stage pattern-mixture model approach.
+\emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+doi: 10.1177/0962280220983544
+
+Spineli LM. An empirical comparison of Bayesian modelling strategies for
+missing binary outcome data in network meta-analysis.
+\emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
+doi: 10.1186/s12874-019-0731-y
+
+Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to account
+for uncertainty due to missing binary outcome data in pairwise meta-analysis.
+\emph{Stat Med} 2015;\bold{34}(12):2062--80. doi: 10.1002/sim.6475
 }
 \seealso{
-\code{\link[R2jags]{jags}}, \code{\link{run_metareg}},
-  \code{\link{run_model}}, \code{\link[base]{textConnection}}
+\code{\link{run_metareg}}, \code{\link{run_model}},
+   \code{\link[R2jags:jags]{jags}},
+   \code{\link[base:textConnection]{textConnection}}
 }
 \author{
 {Loukia M. Spineli}

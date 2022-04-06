@@ -6,36 +6,28 @@
 \format{
 The columns of the data-frame in the argument \code{data} refer to
   the following ordered elements for a continuous outcome:
-  \tabular{ll}{
-   \strong{id} \tab A unique identifier for each trial.\cr
-   \tab \cr
-   \strong{y1} \tab The observed mean outcome in the first arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{y2} \tab The observed mean outcome in the second arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{sd1} \tab The observed standard deviation of the outcome in the
-   first arm of the comparison.\cr
-   \tab \cr
-   \strong{sd2} \tab The observed standard deviation of the outcome in the
-   second arm of the comparison.\cr
-   \tab \cr
-   \strong{m1} \tab The number of MOD in the first arm of the comparison.\cr
-   \tab \cr
-   \strong{m2} \tab The number of MOD in the second arm of the comparison.\cr
-   \tab \cr
-   \strong{n1} \tab The number randomised in the first arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{n2} \tab The number randomised in the second arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{t1} \tab An identified for the intervention in the first arm of
-   the comparison.\cr
-   \tab \cr
-   \strong{t2} \tab An identified for the intervention in the second arm of
-   the comparison.\cr
+  \tabular{rl}{
+  \bold{id} \tab A unique identifier for each trial.\cr
+  \bold{y1} \tab The observed mean outcome in the first arm of the
+  comparison.\cr
+  \bold{y2} \tab The observed mean outcome in the second arm of the
+  comparison.\cr
+  \bold{sd1} \tab The observed standard deviation of the outcome in the
+  first arm of the comparison.\cr
+  \bold{sd2} \tab The observed standard deviation of the outcome in the
+  second arm of the comparison.\cr
+  \bold{m1} \tab The number of missing participants in the first arm of
+  the comparison.\cr
+  \bold{m2} \tab The number of missing participants in the second arm of
+  the comparison.\cr
+  \bold{n1} \tab The number randomised in the first arm of the
+  comparison.\cr
+  \bold{n2} \tab The number randomised in the second arm of the
+  comparison.\cr
+  \bold{t1} \tab An identifier for the intervention in the first arm of
+  the comparison.\cr
+  \bold{t2} \tab An identifier for the intervention in the second arm of
+  the comparison.\cr
   }
 }
 \usage{
@@ -49,7 +41,7 @@ the specification of the columns.}
 
 \item{measure}{Character string indicating the effect measure with values
 \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the mean difference,
-standardised mean difference and ratio of means, respectively.}
+standardised mean difference, and ratio of means, respectively.}
 
 \item{mean_value}{A numeric value for the mean of the normal distribution of
 the informative missingness parameter. The same value is considered for all
@@ -60,7 +52,8 @@ means, the mean value is defined in the logarithmic scale.}
 \item{var_value}{A positive non-zero number for the variance of the normal
 distribution of the informative missingness parameter. When the
 \code{measure} is \code{"MD"}, or \code{"SMD"} the default argument is 1;
-When the \code{measure} is \code{"ROM"} the default argument is 0.04}
+when the \code{measure} is \code{"ROM"} the default argument is 0.04. The
+same value is considered for all trial-arms of the dataset.}
 
 \item{rho}{A numeric value in the interval [-1, 1] that indicates the
 correlation coefficient between two informative missingness parameters in
@@ -70,40 +63,36 @@ parameters.}
 }
 \value{
 A data-frame that additionally includes the following elements:
-  \tabular{ll}{
-   \strong{EM} \tab The effect size adjusted for MOD and obtained using the
-   Taylor series.\cr
-   \tab \cr
-   \strong{se.EM} \tab The standard error of the effect size adjusted for MOD
-   and obtained using the Taylor series.\cr
-  }
+  \item{EM}{The effect size adjusted for the missing participants and
+  obtained using the Taylor series.}
+  \item{se.EM}{The standard error of the effect size adjusted for the missing
+  participants and obtained using the Taylor series.}
 }
 \description{
 Applies the pattern-mixture model under a specific assumption
   about the informative missingness parameter in trial-arms with
-  \bold{continuous} missing participant outcome data (MOD) and uses the
-  Taylor series to obtain the effect size and standard error for each trial
+  \bold{continuous} missing participant outcome data and uses the Taylor
+  series to obtain the effect size and standard error for each trial
   (Mavridis et al., 2015).
 }
 \details{
-The \code{taylor_continuous} function is found in the
+The \code{taylor_continuous} function is integrated in the
   \code{\link{unrelated_effects_plot}} function. The latter uses the
-  the \code{\link[netmeta]{pairwise}} function from the package
+  the \code{\link[netmeta:pairwise]{pairwise}} function from the package
   \href{https://CRAN.R-project.org/package=netmeta}{netmeta}
-  to transform the dataset from the wide arm-based format
-  (see, 'Arguments' for \code{data} in
-  \code{\link{unrelated_effects_plot}})
-  into the long-arm based format.
+  to transform the dataset from the wide arm-based format into the long
+  arm-based format (see, 'Arguments' for \code{data} in
+  \code{\link{unrelated_effects_plot}}).
 }
 \references{
 Mavridis D, White IR, Higgins JP, Cipriani A, Salanti G. Allowing for
 uncertainty due to missing continuous outcome data in pairwise and network
 meta-analysis. \emph{Stat Med} 2015;\bold{34}(5):721--41.
-\doi{10.1002/sim.6365}
+doi: 10.1002/sim.6365
 }
 \seealso{
-\code{\link[netmeta]{pairwise}}, \code{\link{run_model}},
-  \code{\link{unrelated_effects_plot}}
+\href{https://CRAN.R-project.org/package=netmeta}{pairwise},
+  \code{\link{run_model}}, \code{\link{unrelated_effects_plot}}
 }
 \author{
 {Loukia M. Spineli}

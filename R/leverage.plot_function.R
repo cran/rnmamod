@@ -4,9 +4,9 @@
 #'   posterior mean of residual deviance of the trial-arms under the model of
 #'   interest.
 #'
-#' @param net An object of S3 class \code{\link{run_model}},
-#'   \code{\link{run_metareg}}, or \code{\link{run_ume}}.
-#'   See 'Value' in \code{\link{run_model}}, \code{\link{run_metareg}}, or
+#' @param net An object of S3 class \code{\link{run_metareg}},
+#'   \code{\link{run_model}}, or \code{\link{run_ume}}.
+#'   See 'Value' in \code{\link{run_metareg}}, \code{\link{run_model}}, or
 #'   \code{\link{run_ume}}.
 #' @param drug_names A vector of labels with the name of the interventions in
 #'   the order they appear in the argument \code{data} of
@@ -37,12 +37,12 @@
 #' @author {Loukia M. Spineli}
 #'
 #' @seealso \code{\link{data_preparation}}, \code{\link{run_metareg}},
-#'   \code{\link{run_model}}, \code{\link{ume_plot}}, \code{\link{run_ume}}
+#'   \code{\link{run_model}}, \code{\link{run_ume}}, \code{\link{ume_plot}}
 #'
 #' @references
 #' Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
 #' treatment comparison meta-analysis.
-#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44. \doi{10.1002/sim.3767}
+#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44. doi: 10.1002/sim.3767
 #'
 #' @export
 leverage_plot <- function(net, drug_names, title) {

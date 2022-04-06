@@ -23,29 +23,52 @@
 #' @details \code{intervalplot_panel_ume} is integrated in the
 #'   \code{\link{ume_plot}} function. The consistency model and the unrelated
 #'   mean effects model are abbreviated in the y-axis as 'NMA model' and
-#'   'UME model'. The intervals are highlighted with green, when the
-#'   corresponding summary effect sizes do not cross the vertical line of no
+#'   'UME model', respectively. The intervals are highlighted with green, when
+#'   the corresponding summary effect sizes do not cross the vertical line of no
 #'   difference, and red otherwise. Grey panels refer to the frail comparisons
-#'   as detected by the \code{\link{run_ume}} function (see 'Details' in
-#'   \code{\link{run_ume}}).
+#'   as detected by the \code{\link{improved_ume}} function (see 'Details' in
+#'   \code{\link{improved_ume}}).
+#'
+#'   For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+#'   (risk difference) in \code{\link{run_model}}, \code{intervalplot_panel_ume}
+#'   currently presents the results in the odds ratio scale.
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{run_model}}, \code{\link{ume_plot}},
-#'   \code{\link{run_ume}}
+#' @seealso \code{\link{improved_ume}} \code{\link{run_model}},
+#'   \code{\link{run_ume}}, \code{\link{ume_plot}}
 #'
 #' @references
-#' Spineli LM. A novel framework to evaluate the consistency assumption globally
-#' in a network of interventions. \emph{submitted} 2021.
+#' Spineli LM. A revised framework to evaluate the consistency assumption
+#' globally in a network of interventions. \emph{Med Decis Making} 2021.
+#' doi: 10.1177/0272989X211068005
 #'
 #' @export
 intervalplot_panel_ume <- function(full, ume, drug_names) {
 
-  em_full <- full$EM
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
+
+  if (ume$type != "ume" || is.null(ume$type)) {
+    stop("'ume' must be an object of S3 class 'run_ume'.",
+         call. = FALSE)
+  }
+
+  measure <- if (is.element(full$measure, c("RR", "RD"))) {
+    "OR"
+  } else {
+    full$measure
+  }
+  em_full <- if (is.element(full$measure, c("RR", "RD"))) {
+    full$EM_LOR
+  } else {
+    full$EM
+  }
   em_ume <- ume$EM
   obs_comp <- ume$obs_comp
   frail_comp <- ume$frail_comp
-  measure <- effect_measure_name(full$measure)
 
   # Possible and observed comparisons
   possible_comp <- possible_observed_comparisons(drug_names, obs_comp)
@@ -72,7 +95,7 @@ intervalplot_panel_ume <- function(full, ume, drug_names) {
   ume_stat_signif <- ifelse(ume_lower > 0 | ume_upper < 0, "strong", "weak")
 
   # Create the data-frame
-  data_set <- if (is.element(full$measur, c("OR", "ROM"))) {
+  data_set <- if (is.element(measure, c("OR", "RR", "ROM"))) {
     data.frame(round(exp(c(nma_mean, ume_mean)), 2),
                round(exp(c(nma_lower, ume_lower)), 2),
                round(exp(c(nma_upper, ume_upper)), 2),
@@ -98,23 +121,21 @@ intervalplot_panel_ume <- function(full, ume, drug_names) {
                           "frail")
 
   # Obtain forestplot
-  add <- ifelse(is.element(full$measure, c("OR", "ROM")), 1, 4)
+  measure2 <- effect_measure_name(measure, lower = FALSE)
+  add <- ifelse(is.element(measure, c("OR", "ROM")), 1, 4)
   caption <- if (full$D == 0 & is.element(measure,
-                                          c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours the first arm; if",
-          measure, "> 1, favours thr second arm")
-  } else if (full$D == 1 & is.element(measure,
-                                      c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours the second arm",
-          "; if", measure, "> 1, favours the first arm")
-  } else if (full$D == 0 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours the first arm; if",
-          measure, "> 0, favours the second arm")
-  } else if (full$D == 1 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours the second arm",
-          "; if", measure, "> 0, favours the first arm")
+                                          c("OR", "ROM"))) {
+    paste(measure2, "< 1, favours the first arm.",
+          measure2, "> 1, favours the second arm.")
+  } else if (full$D == 1 & is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 1, favours the second arm.",
+          measure2, "> 1, favours the first arm.")
+  } else if (full$D == 0 & !is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 0, favours the first arm.",
+          measure2, "> 0, favours the second arm.")
+  } else if (full$D == 1 & !is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 0, favours the second arm.",
+          measure2, "> 0, favours the first arm.")
   }
 
   ggplot(data = data_set,
@@ -131,8 +152,8 @@ intervalplot_panel_ume <- function(full, ume, drug_names) {
               alpha = 0.2) +
     geom_linerange(size = 2,
                    position = position_dodge(width = 0.5)) +
-    geom_hline(yintercept = ifelse(!is.element(full$measure, c("OR", "ROM")),
-                                   0, 1),
+    geom_hline(yintercept = ifelse(!is.element(
+      measure, c("OR", "RR", "ROM")), 0, 1),
                lty = 1,
                size = 1,
                col = "grey53") +
@@ -157,24 +178,6 @@ intervalplot_panel_ume <- function(full, ume, drug_names) {
               parse = FALSE,
               position = position_dodge(width = 0.8),
               inherit.aes = TRUE) +
-    #geom_text(aes(x = 0.45,
-    #              y = ifelse(is.element(full$measure, c("OR", "ROM")),
-    #                         0.1, -0.2*add),
-    #              label = ifelse(full$D == 0, "Favours first arm",
-    #                             "Favours second arm")),
-    #          size = 3.5,
-    #          vjust = 0,
-    #          hjust = 0,
-    #          color = "black") +
-    #geom_text(aes(x = 0.45,
-    #              y = ifelse(is.element(full$measure, c("OR", "ROM")),
-    #                         1.2, 0.2),
-    #              label = ifelse(full$D == 0, "Favours second arm",
-    #                             "Favours first arm")),
-    #          size = 3.5,
-    #          vjust = 0,
-    #          hjust = 0,
-    #          color = "black") +
     facet_wrap(vars(factor(comp, levels = unique(data_set$comp))),
                scales = "fixed") +
     scale_fill_manual(breaks = c("yes", "no"),
@@ -182,10 +185,9 @@ intervalplot_panel_ume <- function(full, ume, drug_names) {
     scale_color_manual(breaks = c("strong", "weak"),
                        values = c("#009E73", "#D55E00")) +
     scale_y_continuous(trans = ifelse(
-      !is.element(measure, c("Odds ratio", "Ratio of means")),
-      "identity", "log10")) +
+      !is.element(measure, c("OR", "RR", "ROM")), "identity", "log10")) +
     labs(x = "",
-         y = measure,
+         y = measure2,
          colour = "Evidence",
          fill = "",
          caption = caption) +

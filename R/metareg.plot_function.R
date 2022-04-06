@@ -1,8 +1,8 @@
 #' End-user-ready results for network meta-regression
 #'
 #' @description Illustrates the effect estimates, predictions and regression
-#'   coefficients of comparisons with a specific comparator and also exports
-#'   these results to an Excel format.
+#'   coefficients of comparisons with a specified comparator intervention
+#'   and also exports these results to an Excel file.
 #'
 #' @param full An object of S3 class \code{\link{run_model}}. See 'Value' in
 #'   \code{\link{run_model}}.
@@ -20,61 +20,60 @@
 #'   the order of the interventions as they appear in \code{data} is used,
 #'   instead.
 #' @param save_xls Logical to indicate whether to export the tabulated results
-#'   to an 'xlsx' file (via the \code{\link[writexl]{write_xlsx}}
-#'   function) to the working directory of the user. The default is \code{FALSE}
-#'   (do not export).
+#'   to an 'xlsx' file (via the \code{\link[writexl:write_xlsx]{write_xlsx}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=writexl}{writexl}) at the working
+#'   directory of the user. The default is \code{FALSE} (do not export).
 #'
 #' @return \code{metareg_plot} prints on the R console a message on the most
-#'   parsimonious model (if any) based on the deviance information criterion
-#'   (DIC; in red text). Furthermore, the function returns the following list of
-#'    elements:
-#'   \tabular{ll}{
-#'    \code{table_estimates} \tab The posterior mean, and 95\% credible interval
-#'    of the summary effect measure (according to the argument \code{measure}
-#'    defined in \code{\link{run_model}}) for each comparison with the selected
-#'    intervention under network meta-analysis and network meta-regression
-#'    based on the specified \code{cov_value}.\cr
-#'    \tab \cr
-#'    \code{table_predictions} \tab The posterior mean, and 95\% predictive
-#'    interval of the summary effect measure (according to the argument
-#'    \code{measure} defined in \code{\link{run_model}}) for each comparison
-#'    with the selected intervention under network meta-analysis and network
-#'    meta-regression based on the specified \code{cov_value}.\cr
-#'    \tab \cr
-#'    \code{table_model_assessment} \tab The DIC, total residual deviance,
-#'    number of effective parameters, and the posterior median and 95\% credible
-#'    interval of between-trial standard deviation (\emph{tau}) under each model
-#'    (Spiegelhalter et al., (2002)). When a fixed-effect model has been
-#'    performed, \code{metareg_plot} does not return results on tau.\cr
-#'    \tab \cr
-#'    \code{table_regression_coeffients} \tab The posterior mean and 95\%
-#'    credible interval of the regression coefficient(s).\cr
-#'    \tab \cr
-#'    \code{interval_plots} \tab The panel of forest-plots on the estimated and
-#'    predicted effect sizes of comparisons with the selected intervention under
-#'    network meta-analysis and network meta-regression based on the specified
-#'    \code{cov_value}. See 'Details' and 'Value' in
-#'    \code{\link{forestplot_metareg}}.\cr
-#'    \tab \cr
-#'    \code{sucra_scatterplot} \tab A scatterplot of the SUCRA values from the
-#'    network meta-analysis against the SUCRA values from the network
-#'    meta-regression based on the specified \code{cov_value}. See 'Details'
-#'    and 'Value' in \code{\link{scatterplot_sucra}}.
-#' }
+#'   parsimonious model (if any) based on the DIC (in red text). Furthermore,
+#'   the function returns the following list of elements:
+#'   \item{table_estimates}{The posterior mean, and 95\% credible interval
+#'   of the summary effect measure (according to the argument \code{measure}
+#'   defined in \code{\link{run_model}}) for each comparison with the selected
+#'   intervention under network meta-analysis and network meta-regression
+#'   based on the specified \code{cov_value}.}
+#'   \item{table_predictions}{The posterior mean, and 95\% prediction
+#'   interval of the summary effect measure (according to the argument
+#'   \code{measure} defined in \code{\link{run_model}}) for each comparison
+#'   with the selected intervention under network meta-analysis and network
+#'   meta-regression based on the specified \code{cov_value}.}
+#'   \item{table_model_assessment}{The DIC, total residual deviance,
+#'   number of effective parameters, and the posterior median and 95\% credible
+#'   interval of between-trial standard deviation (\emph{tau}) under each model
+#'   (Spiegelhalter et al., 2002). When a fixed-effect model has been
+#'   performed, \code{metareg_plot} does not return results on \emph{tau}. For a
+#'   binary outcome, the results refer to the odds ratio scale.}
+#'   \item{table_regression_coeffients}{The posterior mean and 95\%
+#'   credible interval of the regression coefficient(s) (according to the
+#'   argument \code{covar_assumption} defined in \code{\link{run_metareg}}).
+#'   For a binary outcome, the results refer to the odds ratio scale.}
+#'   \item{interval_plot}{A forest plot on the estimated and predicted effect
+#'   sizes of comparisons with the selected comparator intervention under
+#'   network meta-analysis and network meta-regression based on the specified
+#'   \code{cov_value}. See 'Details' and 'Value' in
+#'   \code{\link{forestplot_metareg}}.}
+#'   \item{sucra_scatterplot}{A scatterplot of the SUCRA values from the
+#'   network meta-analysis against the SUCRA values from the network
+#'   meta-regression based on the specified \code{cov_value}. See 'Details'
+#'   and 'Value' in \code{\link{scatterplot_sucra}}.}
 #'
-#' @details The DIC of the network meta-analysis model is compared with the DIC
-#'   of the network meta-regression model. If the difference in DIC exceeds 5,
-#'   the network meta-regression model is preferred; if the difference in DIC is
-#'   less than -5, the network meta-analysis model is preferred; otherwise,
-#'   there is little to choose between the compared models.
+#' @details The deviance information criterion (DIC) of the network
+#'   meta-analysis model is compared with the DIC of the network meta-regression
+#'   model. If the difference in DIC exceeds 5, the network meta-regression
+#'   model is preferred; if the difference in DIC is less than -5, the network
+#'   meta-analysis model is preferred; otherwise, there is little to choose
+#'   between the compared models.
 #'
 #'   When the covariate is binary, specify in the second element of
 #'   \code{cov_value} the name of the level for which the output will be
 #'   created.
 #'
 #'   Furthermore, \code{metareg_plot} exports all tabulated results to separate
-#'   'xlsx' files (via the \code{\link[writexl]{write_xlsx}} function)
-#'   to the working directory of the user.
+#'   'xlsx' files (via the \code{\link[writexl:write_xlsx]{write_xlsx}} function
+#'   of the R-package
+#'   \href{https://CRAN.R-project.org/package=writexl}{writexl}) to the working
+#'   directory of the user.
 #'
 #'   \code{metareg_plot} can be used only for a network of interventions. In the
 #'   case of two interventions, the execution of the function will be stopped
@@ -84,17 +83,17 @@
 #'
 #' @seealso \code{\link{forestplot_metareg}}, \code{\link{run_metareg}},
 #'   \code{\link{run_model}}, \code{\link{scatterplot_sucra}},
-#'   \code{\link[writexl]{write_xlsx}}
+#'   \code{\link[writexl:write_xlsx]{write_xlsx}}
 #'
 #' @references
 #' Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 #' for presenting results from multiple-treatment meta-analysis: an overview and
 #' tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-#' \doi{10.1016/j.jclinepi.2010.03.016}
+#' doi: 10.1016/j.jclinepi.2010.03.016
 #'
 #' Spiegelhalter DJ, Best NG, Carlin BP, van der Linde A. Bayesian measures of
-#' model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}:583--616.
-#' \doi{10.1111/1467-9868.00353}
+#' model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}(4):583--616.
+#' doi: 10.1111/1467-9868.00353
 #'
 #' @examples
 #' data("nma.baker2009")
@@ -130,20 +129,30 @@ metareg_plot <- function(full,
                          drug_names,
                          save_xls) {
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
+
+  if (reg$type != "nmr" || is.null(reg$type)) {
+    stop("'reg' must be an object of S3 class 'run_metareg'.",
+         call. = FALSE)
+  }
+
   if (length(unique(reg$covariate)) < 3 &
       !is.element(cov_value[[1]], reg$covariate)) {
     aa <- "The first element of the argument 'cov_value' is out of the value"
-    stop(paste(aa, "range of the analysed covariate"), call. = FALSE)
+    stop(paste(aa, "range of the analysed covariate."), call. = FALSE)
   } else if (length(unique(reg$covariate)) > 2 &
              (cov_value[[1]] < min(reg$covariate) |
               cov_value[[1]] > max(reg$covariate))) {
     aa <- "The first element of the argument 'cov_value' is out of the value"
-    stop(paste(aa, "range of the analysed covariate"), call. = FALSE)
+    stop(paste(aa, "range of the analysed covariate."), call. = FALSE)
   }
 
 
   if (length(drug_names) < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
@@ -151,7 +160,7 @@ metareg_plot <- function(full,
     stop("The argument 'cov_value' has not been defined", call. = FALSE)
   } else if (length(cov_value) < 2) {
     aa <- "The argument 'cov_value' must be a list with elements a number and"
-    stop(paste(aa, "a character"), call. = FALSE)
+    stop(paste(aa, "a character."), call. = FALSE)
   } else if (length(cov_value) == 2) {
     cov_value
   }
@@ -163,9 +172,9 @@ metareg_plot <- function(full,
   }
 
   compar <- if (missing(compar)) {
-    stop("The argument 'compar' has not been defined", call. = FALSE)
+    stop("The argument 'compar' has not been defined.", call. = FALSE)
   } else if (!is.element(compar, drug_names)) {
-    stop("The value of the argument 'compar' is not found in the 'drug_names'",
+    stop("The value of the argument 'compar' is not found in the 'drug_names'.",
          call. = FALSE)
   } else if (is.element(compar, drug_names)) {
     compar
@@ -183,21 +192,22 @@ metareg_plot <- function(full,
 
   drug_names <- if (missing(drug_names)) {
     aa <- "The argument 'drug_names' has not been defined."
-    bb <- "The intervention ID, as specified in 'data' is used as"
-    cc <- "intervention names"
-    message(cat(paste0("\033[0;", col = 32, "m", aa, " ", bb, " ", cc,
-                       "\033[0m", "\n")))
+    bb <- "The intervention ID, as specified in 'data' is used, instead."
+    message(paste(aa, bb))
     as.character(seq_len(length(full$SUCRA[, 1])))
   } else {
     drug_names
   }
 
   model <- full$model
-  measure <- effect_measure_name(full$measure)
+  measure <- full$measure
+  em_full <- full$EM
+  pred_full <- full$EM_pred
+  sucra_full0 <- full$SUCRA
 
   # Posterior results on the SUCRA value under NMA
-  sucra_full <- round(full$SUCRA, 2)
-  sucra_full_order <- round(full$SUCRA, 2)[order(sucra_full[, 1],
+  sucra_full <- round(sucra_full0, 2)
+  sucra_full_order <- round(sucra_full0, 2)[order(sucra_full[, 1],
                                                  decreasing = TRUE), ]
 
   # Sort the drugs by their NMA-SUCRA in decreasing order
@@ -211,12 +221,12 @@ metareg_plot <- function(full,
   poss_pair_comp <- rbind(poss_pair_comp1, poss_pair_comp2)
 
   # Posterior results on NMA for comparisons with the selected intervention
-  em_ref00_nma <- cbind(rbind(data.frame(mean = full$EM[, 1],
-                                         lower = full$EM[, 3],
-                                         upper = full$EM[, 7]),
-                              data.frame(mean = full$EM[, 1] * (-1),
-                                         lower = full$EM[, 7] * (-1),
-                                         upper = full$EM[, 3] * (-1))),
+  em_ref00_nma <- cbind(rbind(data.frame(mean = em_full[, 1],
+                                         lower = em_full[, 3],
+                                         upper = em_full[, 7]),
+                              data.frame(mean = em_full[, 1] * (-1),
+                                         lower = em_full[, 7] * (-1),
+                                         upper = em_full[, 3] * (-1))),
                         poss_pair_comp)
   em_subset_nma <- subset(em_ref00_nma, em_ref00_nma[5] == compar)
   em_ref0_nma <- rbind(em_subset_nma[, 1:3], c(rep(NA, 3)))
@@ -262,12 +272,12 @@ metareg_plot <- function(full,
   # Posterior results on the predicted estimates of comparisons with the
   # selected comparator as reference
   if (model == "RE") {
-    pred_ref00_nma <- cbind(rbind(data.frame(mean = full$EM_pred[, 1],
-                                             lower = full$EM_pred[, 3],
-                                             upper = full$EM_pred[, 7]),
-                                  data.frame(mean = full$EM_pred[, 1] * (-1),
-                                             lower = full$EM_pred[, 7] * (-1),
-                                             upper = full$EM_pred[, 3] * (-1))),
+    pred_ref00_nma <- cbind(rbind(data.frame(mean = pred_full[, 1],
+                                             lower = pred_full[, 3],
+                                             upper = pred_full[, 7]),
+                                  data.frame(mean = pred_full[, 1] * (-1),
+                                             lower = pred_full[, 7] * (-1),
+                                             upper = pred_full[, 3] * (-1))),
                             poss_pair_comp)
     pred_subset_nma <- subset(pred_ref00_nma, pred_ref00_nma[5] == compar)
     pred_ref0_nma <- rbind(pred_subset_nma[, 1:3], c(rep(NA, 3)))
@@ -291,7 +301,7 @@ metareg_plot <- function(full,
     rownames(pred_ref_nma) <- rownames(pred_ref_nmr) <- NULL
   }
 
-  if (!is.element(measure, c("Odds ratio", "Ratio of means")) & model == "RE") {
+  if (!is.element(measure, c("OR", "RR", "ROM")) & model == "RE") {
     em_ref_nma <- em_ref_nma
     em_ref_nmr <- em_ref_nmr
     pred_ref_nma <- pred_ref_nma
@@ -323,8 +333,7 @@ metareg_plot <- function(full,
              ifelse(reg$beta[2] > 0 | reg$beta[3] < 0, "*", " "))
     }
 
-  } else if (is.element(measure, c("Odds ratio", "Ratio of means")) &
-             model == "RE") {
+  } else if (is.element(measure, c("OR", "RR", "ROM")) & model == "RE") {
     em_ref_nma <- exp(em_ref_nma)
     em_ref_nmr <- exp(em_ref_nmr)
     pred_ref_nma <- exp(pred_ref_nma)
@@ -356,8 +365,7 @@ metareg_plot <- function(full,
              ifelse(beta[2] > 1 | beta[3] < 1, "*", " "))
     }
 
-  } else if (!is.element(measure, c("Odds ratio", "Ratio of means")) &
-             model == "FE") {
+  } else if (!is.element(measure, c("OR", "RR", "ROM")) & model == "FE") {
     em_ref_nma <- em_ref_nma
     em_ref_nmr <- em_ref_nmr
     beta <- beta
@@ -378,8 +386,7 @@ metareg_plot <- function(full,
       paste0("(", round(reg$beta[2], 2), ",", " ", round(reg$beta[3], 2), ")",
              ifelse(reg$beta[2] > 0 | reg$beta[3] < 0, "*", " "))
     }
-  } else if (is.element(measure, c("Odds ratio", "Ratio of means")) &
-             model == "FE") {
+  } else if (is.element(measure, c("OR", "RR", "ROM")) & model == "FE") {
     em_ref_nma <- exp(em_ref_nma)
     em_ref_nmr <- exp(em_ref_nmr)
     beta <- exp(beta)
@@ -520,20 +527,46 @@ metareg_plot <- function(full,
   }
 
   results <- if (model == "RE") {
-    list(table_estimates = knitr::kable(est_both_models),
-         table_predictions = knitr::kable(pred_both_models),
-         table_model_assessment = knitr::kable(table_model_assess),
-         table_regression_coeffients = knitr::kable(reg_coeff),
-         interval_plots = suppressWarnings(ggarrange(forest_plots)),
+    list(table_estimates =
+           knitr::kable(est_both_models,
+                        align = "lcccc",
+                        caption =
+                          paste("Estimation for comparisons with", compar,
+                                "for", cov_value[[1]])),
+         table_predictions =
+           knitr::kable(pred_both_models,
+                        align = "lcccc",
+                        caption =
+                          paste("Prediction for comparisons with", compar,
+                                "for", cov_value[[1]])),
+         table_model_assessment =
+           knitr::kable(table_model_assess,
+                        align = "lcccccc",
+                        caption =
+                          "Model assessment and between-trial heterogeneity"),
+         table_regression_coeffients =
+           knitr::kable(reg_coeff,
+                        caption =
+                          paste("Estimation of regression coefficient(s)")),
+         interval_plot = suppressWarnings(ggarrange(forest_plots)),
          sucra_scatterplot = sucra_scatterplot)
   } else {
-    list(table_estimates = knitr::kable(est_both_models),
-         table_model_assessment = knitr::kable(table_model_assess),
-         table_regression_coeffients = knitr::kable(reg_coeff),
-         interval_plots = suppressWarnings(ggarrange(forest_plots)),
+    list(table_estimates =
+           knitr::kable(est_both_models,
+                        align = "lcccc",
+                        caption =
+                          paste("Estimation for comparisons with", compar,
+                                "for", cov_value[[1]])),
+         table_model_assessment =
+           knitr::kable(table_model_assess,
+                        align = "lccc",
+                        caption = "Model assessment parameters"),
+         table_regression_coeffients =
+           knitr::kable(reg_coeff, caption =
+                          paste("Estimation of regression coefficient(s)")),
+         interval_plot = suppressWarnings(ggarrange(forest_plots)),
          sucra_scatterplot = sucra_scatterplot)
   }
 
-  # Return results
   return(results)
 }

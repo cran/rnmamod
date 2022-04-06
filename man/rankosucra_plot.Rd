@@ -4,32 +4,58 @@
 \alias{rankosucra_plot}
 \title{Rankograms and SUCRA curves}
 \usage{
-rankosucra_plot(full, drug_names)
+rankosucra_plot(
+  full1,
+  full2 = NULL,
+  drug_names1,
+  drug_names2 = NULL,
+  name1 = NULL,
+  name2 = NULL
+)
 }
 \arguments{
-\item{full}{An object of S3 class \code{\link{run_model}}. See 'Value' in
-\code{\link{run_model}}.}
+\item{full1}{An object of S3 class \code{\link{run_model}} for network
+meta-analysis. See 'Value' in \code{\link{run_model}}.}
 
-\item{drug_names}{A vector of labels with the name of the interventions in
+\item{full2}{An object of S3 class \code{\link{run_model}} for network
+meta-analysis of a second outcome. See 'Value' in \code{\link{run_model}}.}
+
+\item{drug_names1}{A vector of labels with the name of the interventions in
 the order they appear in the argument \code{data} of
-\code{\link{run_model}}. If \code{drug_names} is not defined,
-the order of the interventions as they appear in \code{data} is used,
-instead.}
+\code{\link{run_model}} for \code{full1}.}
+
+\item{drug_names2}{A vector of labels with the name of the interventions in
+the order they appear in the argument \code{data} of
+\code{\link{run_model}} for \code{full2}. The elements must be a subset of
+\code{drug_names1}.}
+
+\item{name1}{The text for the title of the results that refer to
+the outcome under \code{full1}.}
+
+\item{name2}{The text for the title of the results that refer to
+the outcome under \code{full2}.}
 }
 \value{
-A panel of rankograms with integrated SUCRA curves for each
-  intervention in the network (Salanti et al., 2011). The x-axis of each
-  panel refers to the ranking, and the y-axis refers to the ranking
+A panel of rankograms (red bars) with integrated blue SUCRA curves
+  for each intervention in the network (Salanti et al., 2011). The x-axis of
+  each panel refers to the ranking, and the y-axis refers to the ranking
   probability expressed in percentage.
 }
 \description{
-Returns a panel of rankograms with integrated SUCRA curves for
-  each intervention in the network.
+It returns a panel of rankograms with integrated SUCRA curves
+  for each intervention in the network. The function can illustrate the
+  results of a single or two outcomes simultaneously.
 }
 \details{
 Interventions are sorted in the descending order of their SUCRA
   value. The SUCRA value expressed in percentage appears on the top left
-  corner of each panel.
+  corner of each panel. In the case of two outcomes, the SUCRA values of the
+  outcome under the argument \code{full1} are considered to sort the
+  interventions from the best to the worst.
+
+  When a second outcome is also considered, different colours are used to
+  draw the corresponding SUCRA curves and the rankograms: green for the
+  outcome under \code{full1}, and red for the outcome under \code{full2}.
 
   \code{rankosucra_plot} can be used only for a network of interventions.
   Otherwise, the execution of the function will be stopped and an error
@@ -48,15 +74,15 @@ interv_names <- c("placebo", "pramipexole",
                   "tricyclic antidepressant", "pergolide")
 
 # Create the integrated rankograms and SUCRA curves
-rankosucra_plot(full = res,
-                drug_names = interv_names)
+rankosucra_plot(full1 = res,
+                drug_names1 = interv_names)
 
 }
 \references{
 Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 for presenting results from multiple-treatment meta-analysis: an overview and
 tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-\doi{10.1016/j.jclinepi.2010.03.016}
+doi: 10.1016/j.jclinepi.2010.03.016
 }
 \seealso{
 \code{\link{run_model}}

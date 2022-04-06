@@ -22,10 +22,10 @@
 #'
 #' @details \code{scatterplots_dev} is integrated in the \code{\link{ume_plot}}
 #'   function to compare the models regarding the posterior mean of deviance.
-#'   This scatterplot has also been considered by Dias et al., (2013).
+#'   This scatterplot has also been considered by Dias et al. (2013).
 #'   When the majority of data points are scattered across the diagonal line,
 #'   we may conclude that the compared models have a good agreement. Data points
-#'   systematically scattered above and below the diagonal line may
+#'   systematically scattered above or below the diagonal line may
 #'   contribute more to the poor fit of the unrelated mean effects model and the
 #'   consistency model, respectively.
 #'
@@ -39,7 +39,7 @@
 #' for decision making 4: inconsistency in networks of evidence based on
 #' randomized controlled trials.
 #' \emph{Med Decis Making} 2013a;\bold{33}(5):641--56.
-#' \doi{10.1177/0272989X12455847}
+#' doi: 10.1177/0272989X12455847
 #'
 #' @export
 scatterplots_dev <- function(full, ume, colour) {
@@ -70,6 +70,8 @@ scatterplots_dev <- function(full, ume, colour) {
   ggplot(data = prepare_dev, aes(x = full, y = ume)) +
     geom_point(size = 2, colour = colour) +
     geom_abline(slope = 1, lty = 2, size = 1) +
+    geom_hline(yintercept = 1, lty = 3, size = 1, col = "grey60") +
+    geom_vline(xintercept = 1, lty = 3, size = 1, col = "grey60") +
     geom_text(aes(x = full,
                   y = ume,
                   label = trial_arm),

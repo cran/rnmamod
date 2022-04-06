@@ -22,12 +22,12 @@ the order of the interventions as they appear in \code{data} is used,
 instead.}
 }
 \value{
-\code{kld_barplot} returns a panel of barplots on the KLD measure for
-  each re-analysis.
+\code{kld_barplot} returns a panel of barplots on the
+  Kullback-Leibler divergence measure for each re-analysis.
 }
 \description{
-Produces a barplot with the Kullback-Leibler divergence (KLD)
-  measure from each re-analysis to the primary analysis for a pairwise
+Produces a barplot with the Kullback-Leibler divergence measure
+  from each re-analysis to the primary analysis for a pairwise
   comparison. Currently, \code{kld_barplot} is used concerning the impact of
   missing participant outcome data.
 }
@@ -37,7 +37,7 @@ Produces a barplot with the Kullback-Leibler divergence (KLD)
   function. The scenarios for the missingness parameter (see 'Details' in
   \code{\link{run_sensitivity}}) in the compared interventions are split to
   \emph{Extreme}, \emph{Sceptical}, and \emph{Optimistic} following the
-  classification of Spineli et al., (2021). In each class, bars will green,
+  classification of Spineli et al. (2021). In each class, bars will green,
   orange, and red colour refer to scenarios without distance, less distant,
   and more distant from the primary analysis
   (the missing-at-random assumption).
@@ -56,26 +56,25 @@ res_sens <- readRDS(system.file('extdata/res_sens_taylor.rds',
 
 # Calculate the robustness index
 robust <- robustness_index(sens = res_sens,
-                           threshold = 0.28)
+                           threshold = 0.17)
 
 # The names of the interventions in the order they appear in the dataset
 interv_names <- c("placebo", "inositol")
 
-# Crate the barplot for the comparison 'tiotropium versus salmeterol'
+# Create the barplot for the comparison 'inositol versus placebo'
 kld_barplot(robust = robust,
             compar = c("inositol", "placebo"),
             drug_names = interv_names)
 
 }
 \references{
+Kullback S, Leibler RA. On information and sufficiency.
+\emph{Ann Math Stat} 1951;\bold{22}(1):79--86. doi: 10.1214/aoms/1177729694
+
 Spineli LM, Kalyvas C, Papadimitropoulou K. Quantifying the robustness of
 primary analysis results: A case study on missing outcome data in pairwise
 and network meta-analysis.
-\emph{Res Synth Methods} 2021;\bold{12}(4):475--490.
-\doi{10.1002/jrsm.1478}
-
-Kullback S, Leibler RA. On information and sufficiency.
-\emph{Ann Math Stat} 1951;\bold{22}(1):79--86.
+\emph{Res Synth Methods} 2021;\bold{12}(4):475--90. doi: 10.1002/jrsm.1478
 }
 \seealso{
 \code{\link{robustness_index}}, \code{\link{run_model}},

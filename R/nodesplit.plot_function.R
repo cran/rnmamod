@@ -1,12 +1,12 @@
-#' End-user-ready results for node-splitting approach
+#' End-user-ready results for the node-splitting approach
 #'
 #' @description \code{nodesplit_plot} hosts a toolkit of functions that
 #'   facilitates the comparison of the consistency model
 #'   (via \code{\link{run_model}}) with the node-splitting approach
 #'   (via \code{\link{run_nodesplit}}) regarding the posterior summaries of the
-#'   the direct and indirect effects and inconsistency factor of the split
+#'   direct and indirect effects and inconsistency factor of the split
 #'   nodes, the between-trial standard deviation and model assessment
-#'   parameters (Spiegelhalter et al., (2002)) after each split node in the
+#'   parameters (Spiegelhalter et al., 2002) after each split node in the
 #'   network.
 #'
 #' @param full An object of S3 class \code{\link{run_model}}. See 'Value' in
@@ -19,30 +19,25 @@
 #'   the order of the interventions as they appear in \code{data} is used,
 #'   instead.
 #' @param save_xls Logical to indicate whether to export the tabulated results
-#'   to an 'xlsx' file (via the \code{\link[writexl]{write_xlsx}}
-#'   function) to the working directory of the user. The default is \code{FALSE}
-#'   (do not export).
+#'   to an 'xlsx' file (via the \code{\link[writexl:write_xlsx]{write_xlsx}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=writexl}{writexl}) at the working
+#'   directory of the user. The default is \code{FALSE} (do not export).
 #'
 #' @return \code{nodesplit_plot} returns the following list of elements:
-#'   \tabular{ll}{
-#'    \code{table_effect_size} \tab A data-frame with the posterior mean,
-#'    posterior standard deviation and 95\% credible interval of the direct and
-#'    indirect effect and the inconsistency factor of each split node.\cr
-#'    \tab \cr
-#'    \code{table_model_assessment} \tab A data-frame with the model assessment
-#'    parameters (deviance information criterion (DIC), posterior mean of total
-#'    residual deviance, and number of effective parameters), the posterior
-#'    median, posterior standard deviation and 95\% credible interval of
-#'    tau under the consistency model and after each split node. See
-#'    'Details'.\cr
-#'    \tab \cr
-#'    \code{intervalplot_inconsistency_factor} \tab A panel of interval plots on
-#'    the direct and indirect effect of the split nodes and the corresponding
-#'    inconsistency factor. See 'Details'.\cr
-#'    \tab \cr
-#'    \code{intervalplot_tau} \tab An interval plot on tau after each
-#'    split node. See 'Details'.\cr
-#'   }
+#'   \item{table_effect_size}{A data-frame with the posterior mean,
+#'   posterior standard deviation and 95\% credible interval of the direct and
+#'   indirect effect and the inconsistency factor of each split node.}
+#'   \item{table_model_assessment}{A data-frame with the model assessment
+#'   parameters (DIC, posterior mean of total residual deviance, and number of
+#'   effective parameters), the posterior median, posterior standard deviation
+#'   and 95\% credible interval of \emph{tau} under the consistency model and
+#'   after each split node. See 'Details'.}
+#'   \item{intervalplot_inconsistency_factor}{A panel of interval plots on
+#'   the direct and indirect effect of the split nodes and the corresponding
+#'   inconsistency factor. See 'Details'.}
+#'   \item{intervalplot_tau}{An interval plot on \emph{tau} after each
+#'   split node. See 'Details'.}
 #'
 #' @details \code{intervalplot_inconsistency_factor} includes as many interval
 #'   plots as the number of split nodes in the network. Each interval plot
@@ -54,34 +49,49 @@
 #'   the direct and indirect effect), and red otherwise. If there are more than
 #'   30 split nodes, the function presents the interval plots on split nodes
 #'   with conclusive inconsistency factor (green intervals) or those with
-#'   inconsistent sign in the direct and indirect effect.
+#'   an opposite sign in the direct and indirect effects.
 #'
-#'   \code{intervalplot_tau} is a interval plot on the median and 95\% credible
+#'   \code{intervalplot_tau} is an interval plot on the median and 95\% credible
 #'   interval of \emph{tau} after each split node. The lines that correspond to
-#'   the split nodes are sorted in ascending order of the DIC which appears at
-#'   the top of each line.
-#'   The 95\% credible interval of tau under the consistency model
-#'   appears as a rectangle in the interval plot. When a fixed-effect model has
-#'   been performed, \code{nodesplit_plot} does not return the
-#'   \code{intervalplot_tau}.
+#'   the split nodes are sorted in ascending order of the deviance information
+#'   criterion (DIC) which appears at the top of each line.
+#'   The estimated median and 95\% credible intervals of \emph{tau} under the
+#'   consistency model appear in the interval plot as a solid and two dotted
+#'   parallel blue lines, respectively. The different levels of heterogeneity
+#'   appear as green, yellow, orange, and red rectangulars to indicate a low,
+#'   reasonable, fairly high, and fairly extreme heterogeneity, respectively,
+#'   following the classification of Spiegelhalter et al. (2004).
+#'   When a fixed-effect model has been performed, \code{nodesplit_plot} does
+#'   not return the \code{intervalplot_tau}.
 #'
-#'   The \code{table_model_assessment} also includes the column
+#'   \code{table_model_assessment} also includes the column
 #'   \emph{DIC-based better fit} that indicates the preferred model in terms of
 #'   parsimony for each split node. Therefore, the DIC of the model after each
 #'   split node is compared with the DIC of the consistency model
-#'   (Dias et al., (2010)). If the difference in DIC exceeds 5, the consistency
+#'   (Dias et al., 2010). If the difference in DIC exceeds 5, the consistency
 #'   model is preferred; if the difference in DIC is less than -5, the model
 #'   after the split node is preferred; otherwise, there is little to choose
 #'   between the compared models.
 #'
+#'   For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+#'   (risk difference) in \code{\link{run_model}}, \code{nodesplit_plot}
+#'   currently presents the results in the odds ratio scale. This is because,
+#'   the odds ratio is used as the 'best-case' effect measure in
+#'   \code{\link{run_model}}. Then, relative risk, and risk difference are
+#'   obtained as a function of the odds ratio and the selected baseline risk
+#'   (See 'Details' in \code{\link{run_model}}).
+#'
 #'   The split nodes have been automatically selected via the
-#'   \code{\link[gemtc]{mtc.nodesplit.comparisons}} function of the
-#'   R-package \href{https://CRAN.R-project.org/package=gemtc}{gemtc}.
+#'   \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=gemtc}{gemtc}.
 #'   See 'Details' in \code{\link{run_nodesplit}}.
 #'
 #'   Furthermore, \code{nodesplit_plot} exports both data-frames to separate
-#'   'xlsx' files (via the \code{\link[writexl]{write_xlsx}} function) to the
-#'   working directory of the user.
+#'   'xlsx' files (via the \code{\link[writexl:write_xlsx]{write_xlsx}} function
+#'   of the R-package
+#'   \href{https://CRAN.R-project.org/package=writexl}{writexl}) to the working
+#'   directory of the user.
 #'
 #'   \code{nodesplit_plot} can be used only for a network of interventions and
 #'   when there is at least one split node. Otherwise, the execution of the
@@ -90,17 +100,22 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{run_model}}, \code{\link{run_nodesplit}},
-#'   \code{\link[gemtc]{mtc.nodesplit.comparisons}}
+#' @seealso
+#'   \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}},
+#'   \code{\link{run_model}}, \code{\link{run_nodesplit}},
+#'   \code{\link[writexl:write_xlsx]{write_xlsx}}
 #'
 #' @references
 #' Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
 #' treatment comparison meta-analysis.
-#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44. \doi{10.1002/sim.3767}
+#' \emph{Stat Med} 2010;\bold{29}(7-8):932--44. doi: 10.1002/sim.3767
+#'
+#' Spiegelhalter DJ, Abrams KR, Myles JP. Bayesian approaches to clinical trials
+#' and health-care evaluation. John Wiley and Sons, Chichester, 2004.
 #'
 #' Spiegelhalter DJ, Best NG, Carlin BP, van der Linde A. Bayesian measures of
-#' model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}:583--616.
-#' \doi{10.1111/1467-9868.00353}
+#' model complexity and fit. \emph{J R Stat Soc B} 2002;\bold{64}(4):583--616.
+#' doi: 10.1111/1467-9868.00353
 #'
 #' @examples
 #' data("nma.baker2009")
@@ -124,6 +139,16 @@
 #' @export
 nodesplit_plot <- function(full, node, drug_names, save_xls) {
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
+
+  if (node$type != "node"|| is.null(node$type)) {
+    stop("'node' must be an object of S3 class 'run_nodesplit'.",
+         call. = FALSE)
+  }
+
   if (is.null(node)) {
     stop("There is no split node.", call. = FALSE)
   }
@@ -135,19 +160,21 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
   }
 
   data <- full$data
-  measure <- full$measure
+  measure <- if (is.element(full$measure, c("RR", "RD"))) {
+    "OR"
+  } else {
+    full$measure
+  }
   item <- data_preparation(data, measure)
   if (item$nt < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
   drug_names <- if (missing(drug_names)) {
     aa <- "The argument 'drug_names' has not been defined."
-    bb <- "The intervention ID, as specified in 'data' is used as"
-    cc <- "intervention names"
-    message(cat(paste0("\033[0;", col = 32, "m", aa, " ", bb, " ", cc,
-                       "\033[0m", "\n")))
+    bb <- "The intervention ID, as specified in 'data' is used, instead."
+    message(paste(aa, bb))
     nt <- length(full$SUCRA[, 1])
     as.character(1:nt)
   } else {
@@ -159,7 +186,7 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
   model_assess_nma <- full$model_assessment
 
   # Effect measure
-  measure <- effect_measure_name(full$measure)
+  measure2 <- effect_measure_name(measure, lower = FALSE)
 
   # Analysis model
   model <- full$model
@@ -255,8 +282,8 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
                        scales = "fixed") +
             labs(x = "",
                  y = ifelse(
-                   is.element(measure, c("Odds ratio", "Ratio of means")),
-                   paste(measure, "(in logarithmic scale)"), measure),
+                   is.element(measure, c("OR", "ROM")),
+                   paste(measure2, "(in logarithmic scale)"), measure2),
                  colour = "") +
             coord_flip() +
             scale_color_manual(breaks = c("strong evidence",
@@ -321,8 +348,8 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
             scale_y_continuous(trans = "identity") +
             labs(x = "",
                  y = ifelse(
-                   is.element(measure, c("Odds ratio", "Ratio of means")),
-                   paste(measure, "(in logarithmic scale)"), measure),
+                   is.element(measure, c("OR", "ROM")),
+                   paste(measure2, "(in logarithmic scale)"), measure2),
                  colour = "Evidence on inconsistency") +
             coord_flip() +
             scale_color_manual(breaks = c("strong evidence",
@@ -426,18 +453,42 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
     ggplot(data = prepare_tau,
            aes(x = as.factor(seq_len(length(comp))),
                y = median, ymin = lower, ymax = upper)) +
-      geom_rect(aes(xmin = 0,
-                    xmax = Inf,
-                    ymin = tau_values[3],
-                    ymax = tau_values[4]),
-                fill = "#D55E00",
-                alpha = 0.1) +
-      geom_linerange(size = 2,
-                     position = position_dodge(width = 0.5)) +
+      #geom_rect(aes(xmin = 0,
+      #              xmax = Inf,
+      #              ymin = tau_values[3],
+      #              ymax = tau_values[4]),
+      #          fill = "#D55E00",
+      #          alpha = 0.1) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.099,
+                    fill = "low"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.1, ymax = 0.5,
+                    fill = "reasonable"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 1.0,
+                    fill = "fairly high"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 1.0, ymax = Inf,
+                    fill = "fairly extreme"),
+                alpha = 0.02) +
       geom_hline(yintercept = tau_values[1],
                  lty = 1,
                  size = 1,
-                 col = "#D55E00") +
+                 col = "#006CD1") +
+      geom_hline(yintercept = tau_values[3],
+                 lty = 3,
+                 size = 1,
+                 col = "#006CD1") +
+      geom_hline(yintercept = tau_values[4],
+                 lty = 3,
+                 size = 1,
+                 col = "#006CD1") +
+      geom_linerange(size = 2,
+                     position = position_dodge(width = 0.5)) +
+      #geom_hline(yintercept = tau_values[1],
+      #           lty = 1,
+      #           size = 1,
+      #           col = "#D55E00") +
       geom_point(size = 1.5,
                  colour = "white",
                  stroke = 0.3,
@@ -462,13 +513,21 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
                  size = 3.1) +
       scale_x_discrete(breaks = as.factor(seq_len(length(comp))),
                        labels = comp[seq_len(length(comp))]) +
+      scale_fill_manual(name = "Heterogeneity",
+                        values = c("low" = "#009E73",
+                                   "reasonable" = "orange",
+                                   "fairly high" = "#D55E00",
+                                   "fairly extreme" = "red")) +
       labs(x = "Split nodes (sorted by DIC in ascending order)",
            y = "Between-trial standard deviation") +
       theme_classic() +
       theme(axis.text.x = element_text(color = "black", size = 12, angle = 45,
                                        hjust = 1),
             axis.text.y = element_text(color = "black", size = 12),
-            legend.position = "none")
+            legend.position = "bottom",
+            legend.text =  element_text(color = "black", size = 12),
+            legend.title =  element_text(color = "black", face = "bold",
+                                         size = 12))
   } else {
     NA
   }
@@ -481,13 +540,26 @@ nodesplit_plot <- function(full, node, drug_names, save_xls) {
 
   # Return results
   results <- if (model == "RE") {
-    list(table_effect_size = knitr::kable(table_em),
-         table_model_assessment = knitr::kable(table_assess),
+    list(table_effect_size =
+           knitr::kable(table_em,
+                        align = "lccccccccc",
+                        caption = "Estimates for the split nodes"),
+         table_model_assessment =
+           knitr::kable(table_assess,
+                        align = "lccclccc",
+                        caption = "Model assessment parameters"),
          intervalplot_inconsistency_factor = p1,
-         intervalplot_tau = p2)
+         intervalplot_tau = p2 +
+           guides(fill = guide_legend(override.aes = list(alpha = 0.4))))
   } else {
-    list(table_effect_size = knitr::kable(table_em),
-         table_model_assessment = knitr::kable(table_assess),
+    list(table_effect_size =
+           knitr::kable(table_em,
+                        align = "lccccccccc",
+                        caption = "Estimates fot split nodes"),
+         table_model_assessment =
+           knitr::kable(table_assess,
+                        align = "lcccl",
+                        caption = "Model assessment parameters"),
          intervalplot_inconsistency_factor = p1)
   }
 

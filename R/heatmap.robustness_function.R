@@ -1,7 +1,7 @@
 #' Heatmap of robustness
 #'
 #' @description Facilitates the detection of comparisons that are associated
-#'   with lack of robustness in the context of a sensitivity analysis.
+#'   with a lack of robustness in the context of a sensitivity analysis.
 #'
 #' @param robust An object of S3 class \code{\link{robustness_index}}.
 #'   See 'Value' in \code{\link{robustness_index}}.
@@ -22,8 +22,9 @@
 #'   left to right. Comparisons highlighted with green or red colour imply
 #'   robust or frail conclusions for the primary analysis, respectively.
 #'   This corresponds to robustness index below or at least the selected
-#'   threshold of robustness (see 'Details' in \code{\link{robustness_index}}).
-#'   The robustness index value of each pairwise comparison also appears in the
+#'   threshold of robustness. \code{heatmap_robustness} inherits the threshold
+#'   of robustness selected in the \code{\link{robustness_index}} function.
+#'   The robustness index of each pairwise comparison also appears in the
 #'   corresponding cell.
 #'   When there is at least one comparison with frail conclusions, the primary
 #'   analysis results may be questionable for the whole network
@@ -31,9 +32,6 @@
 #'
 #'   \code{heatmap_robustness} is \emph{not} restricted to the sensitivity
 #'   analysis concerning the impact of missing participant outcome data.
-#'
-#'   \code{heatmap_robustness} uses the threshold of robustness selected in the
-#'   \code{\link{robustness_index}} function.
 #'
 #'   \code{heatmap_robustness} can be used only for a network of interventions.
 #'   Otherwise, the execution of the function will be stopped and an
@@ -47,8 +45,7 @@
 #' Spineli LM, Kalyvas C, Papadimitropoulou K. Quantifying the robustness of
 #' primary analysis results: A case study on missing outcome data in pairwise
 #' and network meta-analysis.
-#' \emph{Res Synth Methods} 2021;\bold{12}(4):475--490.
-#' \doi{10.1002/jrsm.1478}
+#' \emph{Res Synth Methods} 2021;\bold{12}(4):475--90. doi: 10.1002/jrsm.1478
 #'
 #' @examples
 #' data("nma.baker2009")
@@ -73,6 +70,11 @@
 #' @export
 heatmap_robustness <- function(robust, drug_names) {
 
+  if (robust$type != "index" || is.null(robust$type)) {
+    stop("'robust' must be an object of S3 class 'robustness_index'.",
+         call. = FALSE)
+  }
+
   if (any(is.na(robust))) {
     aa <- "Missing participant outcome data have *not* been collected."
     stop(paste(aa, "This function cannot be used."), call. = FALSE)
@@ -80,9 +82,8 @@ heatmap_robustness <- function(robust, drug_names) {
 
   drug_names <- if (missing(drug_names)) {
     aa <- "The  argument 'drug_names' has not been defined."
-    bb <- "The intervention ID, as specified in 'data' is used as"
-    cc <- "intervention names"
-    message(cat(paste0("\033[0;", col = 32, "m", aa, bb, cc, "\033[0m", "\n")))
+    bb <- "The intervention ID, as specified in 'data' is used, instead."
+    message((paste(aa, bb)))
     nt <- (1 + sqrt(1 + 8 * length(robust$robust))) / 2
     as.character(1:nt)
   } else {
@@ -91,39 +92,24 @@ heatmap_robustness <- function(robust, drug_names) {
   len_drugs <- length(drug_names)
 
   if (len_drugs < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
   robust_index <- robust$robust_index
   threshold <- robust$threshold
+  measure <- robust$measure
 
-  if (missing(threshold) & is.element(robust$measure, "OR")) {
+  if (missing(threshold) & is.element(measure, c("OR", "RR", "ROM"))) {
     threshold <- 0.28
-    message(cat(paste0("\033[0;",
-                       col = 32,
-                       "m",
-                       txt =
-                       "The value 0.28 was assigned on 'threshold' by default",
-                       "\033[0m", "\n")))
-  } else if (missing(threshold) & is.element(robust$measure,
-                                             c("MD", "SMD", "ROM"))) {
+    message("The value 0.28 was assigned as 'threshold' by default.")
+  } else if (missing(threshold) & !is.element(measure, c("OR", "RR", "ROM"))) {
     threshold <- 0.17
-    message(cat(paste0("\033[0;",
-                       col = 32,
-                       "m",
-                       txt =
-                       "The value 0.17 was assigned on 'threshold' by default",
-                       "\033[0m", "\n")))
+    message("The value 0.17 was assigned on 'threshold' by default.")
   } else {
     threshold <- threshold
-    message(cat(paste0("\033[0;",
-                       col = 32,
-                       "m",
-                       txt = paste("The value", threshold,
-                                   "was assigned on 'threshold' for",
-                                   effect_measure_name(robust$measure)),
-                       "\033[0m", "\n")))
+    message(paste("The value", threshold, "was assigned as 'threshold' for",
+                   paste0(effect_measure_name(measure, lower = TRUE), ".")))
   }
 
   # Lower triangular matrix: comparisons are read from the left to the right

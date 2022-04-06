@@ -7,10 +7,12 @@
 prepare_nodesplit(measure, model, assumption)
 }
 \arguments{
-\item{measure}{Character string indicating the effect measure with values
-\code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-mean difference, standardised mean difference and ratio of means,
-respectively.}
+\item{measure}{Character string indicating the effect measure. For a binary
+outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+\code{"RD"} for the odds ratio, relative risk, and risk difference,
+respectively. For a continuous outcome, the following can be considered:
+\code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+standardised mean difference and ratio of means, respectively.}
 
 \item{model}{Character string indicating the analysis model with values
 \code{"RE"}, or \code{"FE"} for the random-effects and fixed-effect model,
@@ -29,43 +31,55 @@ uncorrelated, respectively.}
 \value{
 An R character vector object to be passed to
   \code{\link{run_nodesplit}} through the
-  \code{\link[base]{textConnection}} function as the argument \code{object}.
+  \code{\link[base:textConnection]{textConnection}} function as the argument
+  \code{object}.
 }
 \description{
-The WinBUGS code, as written by Dias et al., (2010) to run a
+The WinBUGS code, as written by Dias et al. (2010) to run a
   one-stage Bayesian node-splitting model, extended to incorporate the
   pattern-mixture model for binary or continuous missing participant outcome
-  data.
+  data (Spineli et al., 2021; Spineli, 2019).
 }
 \details{
 This functions creates the model in the JAGS dialect of the BUGS
   language. The output of this function constitutes the argument
-  \code{model.file} of \code{\link[R2jags]{jags}} via the
-  \code{\link[base]{textConnection}} function.
+  \code{model.file} of \code{\link[R2jags:jags]{jags}} (in the R-package
+  \href{https://CRAN.R-project.org/package=R2jags}{R2jags}) via the
+  \code{\link[base:textConnection]{textConnection}} function.
+
+  \code{prepare_nodesplit} inherits \code{measure}, \code{model}, and
+  \code{assumption} from the \code{\link{run_model}} function. For a binary
+  outcome, when \code{measure} is "RR" (relative risk) or "RD"
+  (risk difference) in \code{\link{run_model}}, \code{prepare_nodesplit}
+  currently considers the WinBUGS code for the odds ratio.
 
   The split nodes have been automatically selected via the
-  \code{\link[gemtc]{mtc.nodesplit.comparisons}} function of the
-  R-package \href{https://CRAN.R-project.org/package=gemtc}{gemtc}.
+  \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}}
+  function of the R-package
+  \href{https://CRAN.R-project.org/package=gemtc}{gemtc}.
   See 'Details' in \code{\link{run_nodesplit}}.
 }
 \references{
+Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
+treatment comparison meta-analysis.
+\emph{Stat Med} 2010;\bold{29}(7-8):932--44. doi: 10.1002/sim.3767
+
 Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
 data in network meta-analysis: a one-stage pattern-mixture model approach.
-\emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
+\emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+doi: 10.1177/0962280220983544
 
 Spineli LM. An empirical comparison of Bayesian modelling strategies for
 missing binary outcome data in network meta-analysis.
 \emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
-\doi{10.1186/s12874-019-0731-y}
-
-Dias S, Welton NJ, Caldwell DM, Ades AE. Checking consistency in mixed
-treatment comparison meta-analysis.
-\emph{Stat Med} 2010;\bold{29}(7-8):932--44. \doi{10.1002/sim.3767}
+doi: 10.1186/s12874-019-0731-y
 }
 \seealso{
-\code{\link[R2jags]{jags}},
-  \code{\link[gemtc]{mtc.nodesplit.comparisons}},
-  \code{\link{run_nodesplit}}, \code{\link[base]{textConnection}},
+\code{\link[R2jags:jags]{jags}},
+  \code{\link{run_model}},
+  \code{\link[gemtc:mtc.nodesplit.comparisons]{mtc.nodesplit.comparisons}},
+  \code{\link{run_nodesplit}},
+  \code{\link[base:textConnection]{textConnection}}
 }
 \author{
 {Loukia M. Spineli}

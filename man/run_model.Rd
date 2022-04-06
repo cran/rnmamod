@@ -36,12 +36,11 @@ The columns of the data-frame in the argument \code{data} refer
   The number of rows in \code{data} equals the number of collected trials.
   Each element appears in \code{data} as many times as the maximum number of
   interventions compared in a trial of the dataset.
-  In pairwise meta-analysis (PMA), the maximum number of arms is inherently
-  two. The same holds for a network meta-analysis (NMA) without multi-arm
-  trials.
-  In the case of NMA with multi-arm trials, the maximum number of arms
-  exceeds two. See 'Examples' that illustrates the structure of \code{data}
-  for a network with a maximum number of four arms.
+  In pairwise meta-analysis, the maximum number of arms is inherently two.
+  The same holds for a network meta-analysis without multi-arm trials.
+  In the case of network meta-analysis with multi-arm trials, the maximum
+  number of arms exceeds two. See 'Examples' that illustrates the structure
+  of \code{data} for a network with a maximum number of four arms.
   It is not a prerequisite of \code{run_model} that the multi-arm trials
   appear at the bottom of the dataset.
 }
@@ -55,6 +54,8 @@ run_model(
   mean_misspar,
   var_misspar,
   D,
+  ref,
+  base_risk = NULL,
   n_chains,
   n_iter,
   n_burnin,
@@ -65,10 +66,12 @@ run_model(
 \item{data}{A data-frame of the one-trial-per-row format with arm-level data.
 See 'Format' for the specification of the columns.}
 
-\item{measure}{Character string indicating the effect measure with values
-\code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-mean difference, standardised mean difference and ratio of means,
-respectively.}
+\item{measure}{Character string indicating the effect measure. For a binary
+outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+\code{"RD"} for the odds ratio, relative risk, and risk difference,
+respectively. For a continuous outcome, the following can be considered:
+\code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+standardised mean difference and ratio of means, respectively.}
 
 \item{model}{Character string indicating the analysis model with values
 \code{"RE"}, or \code{"FE"} for the random-effects and fixed-effect model,
@@ -89,15 +92,15 @@ correlated and uncorrelated, respectively.}
 1) a character string indicating the distribution with
 (currently available) values \code{"halfnormal"}, \code{"uniform"},
 \code{"lognormal"}, or \code{"logt"}; 2) two numeric values that refer to
-the parameters of the selected distribution.  For \code{"lognormal"}, and
+the parameters of the selected distribution. For \code{"lognormal"}, and
 \code{"logt"} these numbers refer to the mean and precision, respectively.
-For \code{"halfnorm"}, these numbers refer to zero and the scale parameter
-(equal to 4 or 1 being the corresponding precision of the scale parameter
-0.5 or 1). For \code{"uniform"}, these numbers refer to the
+For \code{"halfnormal"}, these numbers refer to zero and the scale
+parameter (equal to 4 or 1 being the corresponding precision of the scale
+parameter 0.5 or 1). For \code{"uniform"}, these numbers refer to the
 minimum and maximum value of the distribution.
 See 'Details' in \code{\link{heterogeneity_param_prior}}.}
 
-\item{mean_misspar}{A numeric value or a vector of two numeric values for the
+\item{mean_misspar}{A scalar or numeric vector of two numeric values for the
 mean of the normal distribution of the informative missingness parameter
 (see 'Details'). The default argument is 0 and corresponds to the
 missing-at-random assumption.
@@ -107,30 +110,40 @@ See also 'Details' in \code{\link{missingness_param_prior}}.}
 normal distribution of the informative missingness parameter.
 When the \code{measure} is \code{"OR"}, \code{"MD"}, or \code{"SMD"}
 the default argument is 1. When the \code{measure} is \code{"ROM"}
-the default argument is 0.04}
+the default argument is 0.04.}
 
 \item{D}{A binary number for the direction of the outcome.
 Set \code{D = 1} for beneficial outcome and \code{D = 0} for harmful
 outcome.}
 
+\item{ref}{An integer specifying the reference intervention. The number
+should match the intervention identifier under element \strong{t} in
+\code{data} (See 'Format').}
+
+\item{base_risk}{A number in the interval (0, 1) that indicates the baseline
+risk for the selected reference intervention. If \code{base_risk} has not
+been defined, the function uses the median event risk for the reference
+intervention as calculated from the corresponding trials in \code{data}.
+This argument is only relevant for binary outcomes.}
+
 \item{n_chains}{Positive integer specifying the number of chains for the
-MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 2.}
 
 \item{n_iter}{Positive integer specifying the number of Markov chains for the
-MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 10000.}
 
 \item{n_burnin}{Positive integer specifying the number of iterations to
 discard at the beginning of the MCMC sampling; an argument of the
-\code{\link[R2jags]{jags}} function of the R-package
+\code{\link[R2jags:jags]{jags}} function of the R-package
 \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1000.}
 
 \item{n_thin}{Positive integer specifying the thinning rate for the
-MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1.}
 }
@@ -138,78 +151,65 @@ The default argument is 1.}
 A list of R2jags output on the summaries of the posterior
   distribution, and the Gelman-Rubin convergence diagnostic
   (Gelman et al., 1992) of the following monitored parameters for a
-  fixed-effect PMA:
-  \tabular{ll}{
-   \code{EM} \tab The estimated summary effect measure (according to the
-   argument \code{measure}).\cr
-   \tab \cr
-   \code{dev_o} \tab The deviance contribution of each trial-arm based
-   on the observed outcome.\cr
-   \tab \cr
-   \code{hat_par} \tab The fitted outcome at each trial-arm.\cr
-   \tab \cr
-   \code{phi} \tab The informative missingness parameter.\cr
-  }
+  fixed-effect pairwise meta-analysis:
+  \item{EM}{The estimated summary effect measure (according to the argument
+  \code{measure}).}
+  \item{EM_LOR}{The estimated summary odd ratio in the logarithmic scale when
+  \code{measure = "RR"} or \code{measure = "RD"}.}
+  \item{dev_o}{The deviance contribution of each trial-arm based on the
+  observed outcome.}
+  \item{hat_par}{The fitted outcome at each trial-arm.}
+  \item{phi}{The informative missingness parameter.}
 
-    For a fixed-effect NMA, the output additionally includes:
-  \tabular{ll}{
-   \code{EM_ref} \tab The estimated summary effect measure
-   (according to the argument \code{measure}) of all comparisons
-   with the reference intervention.\cr
-   \tab \cr
-   \code{SUCRA} \tab The surface under the cumulative ranking curve
-   for each intervention.\cr
-   \tab \cr
-   \code{effectiveneness} \tab The ranking probability of each intervention
-    for every rank.\cr
-  }
+  For a fixed-effect network meta-analysis, the output additionally includes:
+  \item{SUCRA}{The surface under the cumulative ranking curve for each
+  intervention.}
+  \item{SUCRA_LOR}{The surface under the cumulative ranking curve for each
+  intervention under the odds ratio effect measure when \code{measure = "RR"}
+  or \code{measure = "RD"}.}
+  \item{effectiveneness}{The ranking probability of each intervention for
+  every rank.}
 
-  For a random-effects PMA, the output additionally includes the
-  following elements:
-  \tabular{ll}{
-   \code{EM_pred} \tab The predicted summary effect measure
-   (according to the argument \code{measure}).\cr
-   \tab \cr
-   \code{delta} \tab The estimated trial-specific effect measure
-   (according to the argument \code{measure}).\cr
-   \tab \cr
-   \code{tau} \tab The between-trial standard deviation.\cr
-  }
+  For a random-effects pairwise meta-analysis, the output additionally
+  includes the following elements:
+  \item{EM_pred}{The predicted summary effect measure (according to the
+  argument \code{measure}).}
+  \item{EM_pred_LOR}{The predicted summary odds ratio in the logarithmic
+  scale when \code{measure = "RR"} or \code{measure = "RD"}.}
+  \item{delta}{The estimated trial-specific effect measure (according to the
+  argument \code{measure}).}
+  \item{tau}{The between-trial standard deviation.}
 
-  For a random-effects NMA, the output additionally includes:
-  \tabular{ll}{
-   \code{pred_ref} \tab The predicted summary effect measure
-   (according to the argument \code{measure}) of all comparisons
-   with the reference intervention.\cr
-  }
-  In NMA, \code{EM} and \code{EM_pred} refer to all possible pairwise
-  comparisons of interventions in the network. Furthermore, \code{tau} is
-  typically assumed to be common for all observed comparisons in the network.
-  For a multi-arm trial, we estimate a total of \emph{T-1} \code{delta} for
-  comparisons with the baseline intervention of the trial (found in the first
-  column of the element \bold{t}), with \emph{T} being the number of
-  interventions in the trial.
+  In network meta-analysis, \code{EM} and \code{EM_pred} refer to all
+  possible pairwise comparisons of interventions in the network. Furthermore,
+  \code{tau} is typically assumed to be common for all observed comparisons
+  in the network. For a multi-arm trial, we estimate a total of \emph{T-1}
+  \code{delta} for comparisons with the baseline intervention of the trial
+  (found in the first column of the element \bold{t}), with \emph{T} being
+  the number of interventions in the trial.
 
   Furthermore, the output includes the following elements:
-  \tabular{ll}{
-   \code{leverage_o} \tab The leverage for the observed outcome
-   at each trial-arm.\cr
-   \tab \cr
-   \code{sign_dev_o} \tab The sign of the difference between
-   observed and fitted outcome at each trial-arm.\cr
-   \tab \cr
-   \code{model_assessment} \tab A data-frame on the measures of
-   model assessment: deviance information criterion,
-   number of effective parameters, and total residual deviance.\cr
-   \tab \cr
-   \code{jagsfit} \tab An object of S3 class \code{\link[R2jags]{jags}}
-   with the posterior results on all monitored parameters to be used
-   in the \code{\link{mcmc_diagnostics}} function.\cr
-  }
+  \item{abs_risk}{The absolute risks for each intervention. This appears only
+  when \code{measure = "OR"}, \code{measure = "RR"}, or
+  \code{measure = "RD"}.}
+  \item{leverage_o}{The leverage for the observed outcome at each trial-arm.}
+  \item{sign_dev_o}{The sign of the difference between observed and fitted
+  outcome at each trial-arm.}
+  \item{model_assessment}{A data-frame on the measures of model assessment:
+  deviance information criterion, number of effective parameters, and total
+  residual deviance.}
+  \item{indic}{The sign of basic parameters in relation to the reference
+  intervention as specified in argument \code{reg}}
+  \item{jagsfit}{An object of S3 class \code{\link[R2jags:jags]{jags}} with
+  the posterior results on all monitored parameters to be used in the
+  \code{\link{mcmc_diagnostics}} function.}
+
   The \code{run_model} function also returns the arguments \code{data},
   \code{measure}, \code{model}, \code{assumption}, \code{heter_prior},
-  \code{mean_misspar}, \code{var_misspar}, and \code{D} as specified by the
-  user to be considered in other functions of the package.
+  \code{mean_misspar}, \code{var_misspar}, \code{D}, \code{ref},
+  \code{base_risk}, \code{n_chains}, \code{n_iter}, \code{n_burnin},
+  and \code{n_thin} as specified by the user to be inherited by other
+  functions of the package.
 }
 \description{
 Performs a one-stage pairwise or network meta-analysis while addressing
@@ -223,52 +223,57 @@ The model runs in \code{JAGS} and the progress of the simulation
   provide an end-user-ready output.
 
   The \code{\link{data_preparation}} function is called to prepare the data
-  for the Bayesian analysis. \code{\link{data_preparation}} checks whether
-  the element \strong{m} exists in the \code{data}. If this element is
-  missing, \code{\link{data_preparation}} creates a pseudo-data-frame for
-  \strong{m} that has the zero value for the observed trial-arms, and
-  \code{NA} for the unobserved trial-arms, and the pseudo-data-frame \code{I}
-  that is identical with the pseudo-data-frame for \code{m}. If the element
-  \strong{m} exists in the \code{data} and has values only for some
-  trial-arms, the pseudo-data-frame for \strong{m} is identical to \strong{m}
-  for the corresponding trial-arms, and the pseudo-data-frame \code{I} has
-  the value one for these trial-arms. Both pseudo-data-frames aim to retain
-  the trials without information on missing participant outcome data.
+  for the Bayesian analysis. \code{\link{data_preparation}} creates the
+  pseudo-data-frames \code{m_new}, and \code{I}, that have the same
+  dimensions with the element \code{N}. \code{m_new} takes the zero
+  value for the observed trial-arms with unreported missing participant
+  outcome data (i.e., \code{m} equals \code{NA} for the corresponding
+  trial-arms), the same value with \code{m} for the observed trial-arms with
+  reported missing participant outcome data, and \code{NA} for the unobserved
+  trial-arms. \code{I} is a dummy pseudo-data-frame and takes the value one
+  for the observed trial-arms with reported missing participant outcome data,
+  the zero value for the observed trial-arms with unreported missing
+  participant outcome data (i.e., \code{m_new} equals zero for the
+  corresponding trial-arms), and \code{NA} for the unobserved trial-arms.
+  Thus, \code{I} indicates whether missing participant outcome data have been
+  collected for the observed trial-arms. If the user has not defined the
+  element \strong{m} in \code{data}, \code{m_new} and \code{I} take the zero
+  value for all observed trial-arms to indicate that no missing participant
+  outcome data have been collected for the analysed outcome. See 'Details' in
+  \code{\link{data_preparation}}.
 
   Furthermore, \code{\link{data_preparation}} sorts the interventions across
   the arms of each trial in an ascending order and correspondingly the
   remaining elements in \code{data} (see 'Format').
-  \code{\link{data_preparation}} considers the
-  first column in \strong{t} as being the control arm for every trial. Thus,
-  this sorting ensures that interventions with a lower identifier are
-  consistently treated as the control arm in each trial. This case is
-  relevant in non-star-shaped networks. By default, \code{run_model} treats
-  the intervention with identifier equal to one as the reference intervention
-  of the network.
+  \code{\link{data_preparation}} considers the first column in \strong{t} as
+  being the control arm for every trial. Thus, this sorting ensures that
+  interventions with a lower identifier are consistently treated as the
+  control arm in each trial. This case is relevant in non-star-shaped
+  networks.
 
-  To perform a Bayesian PMA or NMA, the \code{\link{prepare_model}} function
-  is called which contains the WinBUGS code as written by Dias et al., (2013)
-  for binomial and normal likelihood to analyse binary and continuous data,
-  respectively. \code{\link{prepare_model}} uses the consistency model (as
-  described in Lu and Ades (2006)) to estimate all possible comparisons in
-  the network.
+  To perform a Bayesian pairwise or network meta-analysis, the
+  \code{\link{prepare_model}} function is called which contains the WinBUGS
+  code as written by Dias et al. (2013) for binomial and normal likelihood to
+  analyse aggregate binary and continuous outcome data, respectively.
+  \code{\link{prepare_model}} uses the consistency model (as described in
+  Lu and Ades (2006)) to estimate all possible comparisons in the network.
   It also accounts for the multi-arm trials by assigning conditional
-  univariate normal distributions on the basic parameters of these trials,
-  namely, effect parameters between the non-baseline arms and the baseline
-  arm of the multi-arm trial (Dias et al., 2013).
+  univariate normal distributions on the underlying trial-specific effect
+  size of comparisons with the baseline arm of the multi-arm trial
+  (Dias et al., 2013).
 
-  The code of Dias et al., (2013) has been extended to incorporate the
+  The code of Dias et al. (2013) has been extended to incorporate the
   pattern-mixture model to adjust the underlying outcome in each arm of
-  every trial for missing participant outcome data (Turner et al., 2015;
-  Spineli, 2019a; Spineli et al., 2021). The assumptions about the
+  every trial for missing participant outcome data (Spineli et al., 2021;
+  Spineli, 2019a; Turner et al., 2015). The assumptions about the
   missingness parameter are specified using the arguments \code{mean_misspar}
   and \code{var_misspar}. Specifically, \code{run_model} considers the
   informative missingness odds ratio in the logarithmic scale for binary
-  outcome data (White et al., 2008; Turner et al., 2015; Spineli, 2019a), the
+  outcome data (Spineli, 2019a; Turner et al., 2015; White et al., 2008), the
   informative missingness difference of means when \code{measure} is
   \code{"MD"} or \code{"SMD"}, and the informative missingness ratio of means
   in the logarithmic scale when \code{measure} is \code{"ROM"}
-  (Mavridis et al., 2015; Spineli et al., 2021).
+  (Spineli et al., 2021; Mavridis et al., 2015).
 
   When \code{assumption} is trial-specific (i.e., \code{"IDE-TRIAL"} or
   \code{"HIE-TRIAL"}), or independent (i.e., \code{"IND-CORR"} or
@@ -282,15 +287,36 @@ The model runs in \code{JAGS} and the progress of the simulation
   In the case of a network, the first value is considered for all
   non-reference interventions and the second value is considered for the
   reference intervention of the network (i.e., the intervention with
-  identifier equal to one). This is necessary to ensure transitivity in the
-  assumptions for the missingness parameter across the network (Spineli,
-  2019b).
+  identifier equal to \code{ref}). This is necessary to ensure transitivity
+  in the assumptions for the missingness parameter across the network
+  (Spineli, 2019b).
+
+  When there is at least one trial-arm with unreported missing participant
+  outcome data (i.e., \code{m} equals \code{NA} for the corresponding
+  trial-arms) or when missing participant outcome data have not been
+  collected for the analysed outcome (i.e., \code{m} is missing in
+  \code{data}), \code{run_model} assigns the assumption \code{"IND-UNCORR"}
+  to \code{assumption}.
 
   Currently, there are no empirically-based prior distributions for the
-  informative missingness parameters. The user may refer to
-  White et al., (2008); Mavridis et al., (2015); Turner et al., (2015) and
-  Spineli (2019) to determine \code{mean_misspar} and select a proper value
-  for \code{var_misspar}.
+  informative missingness parameters. The user may refer to Spineli (2019),
+  Turner et al. (2015), Mavridis et al. (2015), and White et al. (2008) to
+  determine \code{mean_misspar} and select a proper value for
+  \code{var_misspar}.
+
+  To obtain unique absolute risks for each intervention, the network
+  meta-analysis model has been extended to incorporate the transitive risks
+  framework, namely, an intervention has the same absolute risk regardless of
+  the comparator intervention(s) in a trial (Spineli et al., 2017).
+  The absolute risks are a function of the odds ratio (the \strong{base-case}
+  effect measure for a binary outcome) and the selected baseline risk for the
+  reference intervention (\code{ref}) (Appendix in Dias et al., 2013).
+  We advocate using the odds ratio as an effect measure for its desired
+  mathematical properties. Then, the relative risk and risk difference can be
+  obtained as a function of the absolute risks of the corresponding
+  interventions in the comparison of interest. Hence, regardless of the
+  selected \code{measure} for a binary outcome, \code{run_model} performs
+  pairwise or network meta-analysis based on the odds ratio.
 }
 \examples{
 data("nma.baker2009")
@@ -309,6 +335,7 @@ run_model(data = nma.baker2009,
           mean_misspar = c(0, 0),
           var_misspar = 1,
           D = 0,
+          ref = 1,
           n_chains = 3,
           n_iter = 1000,
           n_burnin = 100,
@@ -317,54 +344,63 @@ run_model(data = nma.baker2009,
 
 }
 \references{
-Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
-data in network meta-analysis: a one-stage pattern-mixture model approach.
-\emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
-
-Spineli LM. An empirical comparison of Bayesian modelling strategies for
-missing binary outcome data in network meta-analysis.
-\emph{BMC Med Res Methodol} 2019a;\bold{19}(1):86.
-\doi{10.1186/s12874-019-0731-y}
-
-Spineli LM. Modeling missing binary outcome data while preserving
-transitivity assumption yielded more credible network meta-analysis
-results. \emph{J Clin Epidemiol} 2019b;\bold{105}:19--26.
-
-Mavridis D, White IR, Higgins JP, Cipriani A, Salanti G. Allowing for
-uncertainty due to missing continuous outcome data in pairwise and
-network meta-analysis. \emph{Stat Med} 2015;\bold{34}(5):721--741.
-\doi{10.1002/sim.6365}
-
-Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to account
-for uncertainty due to missing binary outcome data in pairwise
-meta-analysis. \emph{Stat Med} 2015;\bold{34}(12):2062--2080.
-\doi{10.1002/sim.6475}
-
-Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision
-making 2: a generalized linear modeling framework for pairwise and network
-meta-analysis of randomized controlled trials. \emph{Med Decis Making}
-2013;\bold{33}(5):607--617. \doi{10.1177/0272989X12458724}
-
 Cooper NJ, Sutton AJ, Morris D, Ades AE, Welton NJ. Addressing
 between-study heterogeneity and inconsistency in mixed treatment
 comparisons: Application to stroke prevention treatments in individuals
 with non-rheumatic atrial fibrillation.
-\emph{Stat Med} 2009;\bold{28}(14):1861--81. \doi{10.1002/sim.3594}
+\emph{Stat Med} 2009;\bold{28}(14):1861--81. doi: 10.1002/sim.3594
+
+Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision
+making 2: a generalized linear modeling framework for pairwise and network
+meta-analysis of randomized controlled trials. \emph{Med Decis Making}
+2013;\bold{33}(5):607--17. doi: 10.1177/0272989X12458724
+
+Gelman A, Rubin DB. Inference from iterative simulation using multiple
+sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+doi: 10.1214/ss/1177011136
+
+Lu G, Ades AE. Assessing evidence inconsistency in mixed treatment
+comparisons. \emph{J Am Stat Assoc} 2006;\bold{101}:447--59.
+doi: 10.1198/016214505000001302
+
+Mavridis D, White IR, Higgins JP, Cipriani A, Salanti G. Allowing for
+uncertainty due to missing continuous outcome data in pairwise and
+network meta-analysis. \emph{Stat Med} 2015;\bold{34}(5):721--41.
+doi: 10.1002/sim.6365
+
+Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
+data in network meta-analysis: a one-stage pattern-mixture model approach.
+\emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+doi: 10.1177/0962280220983544
+
+Spineli LM. An empirical comparison of Bayesian modelling strategies for
+missing binary outcome data in network meta-analysis.
+\emph{BMC Med Res Methodol} 2019a;\bold{19}(1):86.
+doi: 10.1186/s12874-019-0731-y
+
+Spineli LM. Modeling missing binary outcome data while preserving
+transitivity assumption yielded more credible network meta-analysis
+results. \emph{J Clin Epidemiol} 2019b;\bold{105}:19--26.
+doi: 10.1016/j.jclinepi.2018.09.002
+
+Spineli LM, Brignardello-Petersen R, Heen AF, Achille F, Brandt L,
+Guyatt GH, et al. Obtaining absolute effect estimates to facilitate shared
+decision making in the context of multiple-treatment comparisons.
+Abstracts of the Global Evidence Summit, Cape Town, South Africa.
+\emph{Cochrane Database of Systematic Reviews} 2017;\bold{9}(Suppl 1):18911.
+
+Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to account
+for uncertainty due to missing binary outcome data in pairwise
+meta-analysis. \emph{Stat Med} 2015;\bold{34}(12):2062--80.
+doi: 10.1002/sim.6475
 
 White IR, Higgins JP, Wood AM. Allowing for uncertainty due to missing data
 in meta-analysis--part 1: two-stage methods. \emph{Stat Med}
-2008;\bold{27}(5):711--727. \doi{10.1002/sim.3008}
-
-Lu G, Ades AE. Assessing evidence inconsistency in mixed treatment
-comparisons. \emph{J Am Stat Assoc} 2006;\bold{101}:447--459.
-\doi{10.1198/016214505000001302}
-
-Gelman A, Rubin DB. Inference from iterative simulation using multiple
-sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+2008;\bold{27}(5):711--27. doi: 10.1002/sim.3008
 }
 \seealso{
 \code{\link{data_preparation}},
-  \code{\link{heterogeneity_param_prior}}, \code{\link[R2jags]{jags}}
+  \code{\link{heterogeneity_param_prior}}, \code{\link[R2jags:jags]{jags}},
   \code{\link{missingness_param_prior}}, \code{\link{prepare_model}}
 }
 \author{

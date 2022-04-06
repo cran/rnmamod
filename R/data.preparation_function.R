@@ -2,53 +2,73 @@
 #'
 #' @description
 #'   \code{data_preparation} prepares the dataset in the proper format for
-#'   R2jags ans returns a list of elements that \code{\link{run_model}} inherits
+#'   R2jags and returns a list of elements that \code{\link{run_model}} inherits
 #'   via the argument \code{data}.
 #'
 #' @param data A data-frame of the one-trial-per-row format with arm-level data.
 #'   See 'Format' in \code{\link{run_model}}.
-#' @param measure Character string indicating the effect measure with values
-#'   \code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-#'   mean difference, standardised mean difference and ratio of means,
-#'   respectively.
+#' @param measure Character string indicating the effect measure. For a binary
+#'   outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+#'   \code{"RD"} for the odds ratio, relative risk, and risk difference,
+#'   respectively. For a continuous outcome, the following can be considered:
+#'   \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+#'   standardised mean difference and ratio of means, respectively.
 #'
 #' @return A list of data-frames on the following elements to be passed
 #'   to \code{\link{run_model}}:
-#'   \tabular{ll}{
-#'    \code{m} \tab The number of missing participant outcome data in each
-#'    trial-arm (see 'Details' in the \code{\link{run_model}} function).\cr
-#'    \tab \cr
-#'    \code{N} \tab The number of randomised participants in each trial-arm.\cr
-#'    \tab \cr
-#'    \code{t} \tab The intervention identifier in each trial-arm.\cr
-#'    \tab \cr
-#'    \code{I} \tab The pseudo-data-frame \code{I} (see 'Details'
-#'    in \code{\link{run_model}}).\cr
-#'    \tab \cr
-#'    \code{r} \tab The observed number of events of the outcome in each
-#'    trial-arm,
-#'    when the outcome is binary.\cr
-#'    \tab \cr
-#'    \code{y0} \tab The observed mean value of the outcome in each trial-arm,
-#'    when the outcome is continuous\cr
-#'    \tab \cr
-#'    \code{se0} \tab The observed standard deviation of the outcome in each
-#'    trial-arm,
-#'    when the outcome is continuous\cr
-#'   }
+#'   \item{pseudo_m}{A pseudo-data-frame with values -1 and \strong{m} for the
+#'   corresponding trial-arms with unreported and reported missing participant
+#'   outcome data, respectively (see 'Details').}
+#'   \item{m}{The number of missing participant outcome data in each
+#'   trial-arm (see 'Details').}
+#'   \item{N}{The number of randomised participants in each trial-arm.}
+#'   \item{t}{The intervention identifier in each trial-arm.}
+#'   \item{I}{A pseudo-data-frame that indicates whether missing participant
+#'   outcome data have been reported or not for each observed trial-arm
+#'   (see 'Details').}
+#'   \item{measure}{The effect measure for the analysed outcome.}
+#'   \item{y0}{The observed mean value of the outcome in each trial-arm,
+#'   when the outcome is continuous.}
+#'   \item{se0}{The observed standard deviation of the outcome in each
+#'   trial-arm, when the outcome is continuous.}
+#'   \item{r}{The number of observed events of the outcome in each
+#'   trial-arm, when the outcome is binary.}
 #'
-#' @details \code{data_preparation} prepares the data for the Bayesian analysis.
-#'   \code{data_preparation} checks whether the element \strong{m} exists in the
-#'   \code{data} argument (See 'Format' in \code{\link{run_model}}). If this
-#'   element is missing, \code{data_preparation} creates a pseudo-data-frame for
-#'   \strong{m} that has the zero value for the observed trial-arms, and
-#'   \code{NA} for the unobserved trial-arms, and the pseudo-data-frame \code{I}
-#'   that is identical with the pseudo-data-frame for \code{m}. If the element
-#'   \strong{m} exists in the \code{data} and has values only for some
-#'   trial-arms, the pseudo-data-frame for \strong{m} is identical to \strong{m}
-#'   for the corresponding trial-arms, and the pseudo-data-frame \code{I} has
-#'   the value one for these trial-arms. Both pseudo-data-frames aim to retain
-#'   the trials without information on missing participant outcome data.
+#' @details \code{data_preparation} prepares the data for the Bayesian analysis
+#'   (See 'Format' in \code{\link{run_model}}). \code{data_preparation}
+#'   creates the pseudo-data-frames \code{m_new}, \code{I}, and \code{m_pseudo}
+#'   that have the same dimensions with the element \code{N}. \code{m_new} takes
+#'   the zero value for the observed trial-arms with unreported missing
+#'   participant outcome data (i.e., \strong{m} equals \code{NA} for the
+#'   corresponding trial-arms), the same value with \strong{m} for the observed
+#'   trial-arms with reported missing participant outcome data, and \code{NA}
+#'   for the unobserved trial-arms. \code{I} is a dummy data-frame and takes the
+#'   value one for the observed trial-arms with reported missing participant
+#'   outcome data, the zero value for the observed trial-arms with unreported
+#'   missing participant outcome data (i.e., \code{m_new} equals zero for the
+#'   corresponding trial-arms), and \code{NA} for the unobserved trial-arms.
+#'   Thus, \code{I} indicates whether missing participant outcome data have been
+#'   collected for the observed trial-arms. If the user has not defined the
+#'   element \strong{m} in \code{data_preparation}, \code{m_new} and \code{I}
+#'   take the zero value for all observed trial-arms to indicate that no missing
+#'   participant outcome data have been collected for the analysed outcome.
+#'   \code{I} and \code{m_new} are used from the following functions of the
+#'   package: \code{\link{run_model}}, \code{\link{run_metareg}},
+#'   \code{\link{prepare_model}}, \code{\link{run_nodesplit}},
+#'   \code{\link{prepare_nodesplit}}, \code{\link{run_ume}},
+#'   \code{\link{prepare_ume}}, and  \code{\link{run_sensitivity}}.
+#'   Lastly, \code{m_pseudo} is a variant of \code{m_new}: it takes the value -1
+#'   for the observed trial-arms with unreported missing participant outcome
+#'   data (i.e., \strong{m} equals \code{NA} for the corresponding trial-arms),
+#'   the same value with \strong{m} for the observed trial-arms with reported
+#'   missing participant outcome data, and \code{NA} for the unobserved
+#'   trial-arms. It is used in function \code{\link{heatmap_missing_network}} to
+#'   calculate and illustrate the percentage of missing participant outcome data
+#'   across the observed comparisons and interventions of the network and the
+#'   function \code{\link{heatmap_missing_dataset}} to illustrate the trial-arms
+#'   with unreported missing participant outcome data. All pseudo-data-frames
+#'   aim to retain the trials without information on missing participant outcome
+#'   data.
 #'
 #'   Furthermore, \code{data_preparation} sorts the interventions across
 #'   the arms of each trial in an ascending order and correspondingly the
@@ -61,8 +81,13 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \href{https://CRAN.R-project.org/package=R2jags}{R2jags},
-#'   \code{\link{run_model}}
+#' @seealso \code{\link{heatmap_missing_dataset}},
+#'   \code{\link{heatmap_missing_network}},
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags},
+#'   \code{\link{run_metareg}}, \code{\link{run_model}},
+#'   \code{\link{run_nodesplit}}, \code{\link{run_sensitivity}},
+#'   \code{\link{run_ume}}, \code{\link{prepare_model}},
+#'   \code{\link{prepare_nodesplit}}, \code{\link{prepare_ume}}
 #'
 #' @export
 data_preparation <- function(data, measure) {
@@ -79,30 +104,22 @@ data_preparation <- function(data, measure) {
   na <- apply(treat, 1, function(x) length(which(!is.na(x))))
   # Total number of interventions
   nt <- length(table(as.matrix(treat)))
-  # The intervention with identifier '1' is the reference of the network
-  ref <- 1
 
   measure <- if (missing(measure)) {
-    stop("The argument 'measure' needs to be defined", call. = FALSE)
+    stop("The argument 'measure' needs to be defined.", call. = FALSE)
   } else if ((dim(data %>% select(starts_with("r")))[2] > 0) &
-             !is.element(measure, c("MD", "SMD", "ROM", "OR"))) {
-    stop("Insert 'OR'", call. = FALSE)
+             !is.element(measure, c("OR", "RR", "RD"))) {
+    stop("Insert 'OR', 'RR', or 'RD' for a  binary outcome.", call. = FALSE)
   } else if ((dim(data %>% select(starts_with("r")))[2] == 0) &
-             !is.element(measure, c("MD", "SMD", "ROM", "OR"))) {
-    stop("Insert 'MD', 'SMD' or 'ROM'", call. = FALSE)
-  } else if ((dim(data %>% select(starts_with("r")))[2] > 0) &
-             is.element(measure, c("MD", "SMD", "ROM"))) {
-    stop("Insert 'OR' for a  binary outcome", call. = FALSE)
-  } else if ((dim(data %>% select(starts_with("r")))[2] == 0) &
-             is.element(measure, "OR")) {
-    stop("Insert 'MD', 'SMD' or 'ROM' for a continuous outcome", call. = FALSE)
+             !is.element(measure, c("MD", "SMD", "ROM"))) {
+    stop("Insert 'MD', 'SMD' or 'ROM' for a  continuous outcome.", call. = FALSE)
   } else {
     measure
   }
 
   # When no missing outcome data are collected
   mod <- if (dim(data %>% select(starts_with("m")))[2] == 0) {
-    message("Missing participant outcome data have *not* been collected")
+    message("Missing participant outcome data have *not* been collected.")
     as.data.frame(matrix(NA, nrow = nrow(treat), ncol = ncol(treat)))
   } else {
     # Number of missing participants in each arm of every trial
@@ -124,14 +141,14 @@ data_preparation <- function(data, measure) {
         (dim(sd_obs)[2] != max(na)) |
         (dim(mod)[2] != max(na)) |
         (dim(rand)[2] != max(na))) {
-      stop("All elements must have the same dimension", call. = FALSE)
+      stop("All elements must have the same dimension.", call. = FALSE)
     }
 
     if ((dim(y_obs)[1] != ns) |
         (dim(sd_obs)[1] != ns) |
         (dim(mod)[1] != ns) |
         (dim(rand)[1] != ns)) {
-      stop("All elements must have the same dimension", call. = FALSE)
+      stop("All elements must have the same dimension.", call. = FALSE)
     }
 
     # Order by 'id of t1' < 'id of t1'
@@ -177,13 +194,13 @@ data_preparation <- function(data, measure) {
     if ((dim(event)[2] != max(na)) |
         (dim(mod)[2] != max(na)) |
         (dim(rand)[2] != max(na))) {
-      stop("All elements must have the same dimension", call. = FALSE)
+      stop("All elements must have the same dimension.", call. = FALSE)
     }
 
     if ((dim(event)[1] != ns) |
         (dim(mod)[1] != ns) |
         (dim(rand)[1] != ns)) {
-      stop("All elements must have the same dimension", call. = FALSE)
+      stop("All elements must have the same dimension.", call. = FALSE)
     }
 
     # Order by 'id of t1' < 'id of t2' < 'id of t3', and so on
@@ -215,7 +232,7 @@ data_preparation <- function(data, measure) {
   # Indicate the trials with fully reported missing outcome data (for each arm)
   # If a trial reports missing participant outcome data partially or not at all,
   # insert 'NA'.
-  I <- m_new <- m
+  I <- m_new <- m_pseudo <- m
   for (i in 1:ns) {
     for (k in 1:na[i]) {
       I[i, k] <- if (is.na(m[i, k]) & !is.na(N[i, k])) {
@@ -233,25 +250,35 @@ data_preparation <- function(data, measure) {
       } else if (!is.na(m[i, k]) & !is.na(N[i, k])) {
         m[i, k]
       }
+
+      # Matrix that indicates with -1 the trial-arms with non-reported missing
+      # participants. It is used by the following functions:
+      # 'heatmap_missing_dataset' and 'heatmap_missing_network'.
+      m_pseudo[i, k] <- if (!is.na(t[i, k]) & is.na(m[i, k])) {
+        -1
+      } else if (is.na(m[i, k]) & is.na(N[i, k])) {
+        NA
+      } else if (!is.na(m[i, k]) & !is.na(N[i, k])) {
+        m[i, k]
+      }
     }
   }
-
   names(I) <- paste0("I", seq_len(max(na)))
 
   # Return results
-  results <- list(m = m_new,
+  results <- list(m_pseudo = m_pseudo,
+                  m = m_new,
                   N = N,
                   t = t,
                   I = I,
                   na = na,
                   nt = nt,
                   ns = ns,
-                  ref = ref,
                   measure = measure)
 
   results <- if (is.element(measure, c("MD", "SMD", "ROM"))) {
     append(results, list(y0 = y0, se0 = se0, sd0 = sd0))
-  } else {
+  } else if (is.element(measure, c("OR", "RR", "RD"))) {
     append(results, list(r = r))
   }
 

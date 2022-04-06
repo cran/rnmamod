@@ -10,14 +10,12 @@ forestplot(full, compar, drug_names)
 \item{full}{An object of S3 class \code{\link{run_model}}. See 'Value' in
 \code{\link{run_model}}.}
 
-\item{compar}{A character to indicate the comparator intervention. it must be
+\item{compar}{A character to indicate the comparator intervention. It must be
 any name found in \code{drug_names}.}
 
 \item{drug_names}{A vector of labels with the name of the interventions in
 the order they appear in the argument \code{data} of
-\code{\link{run_model}}. If the argument \code{drug_names} is not defined,
-the order of the interventions as they appear in \code{data} is used,
-instead.}
+\code{\link{run_model}}.}
 }
 \value{
 A panel of two forest plots: (1) a forest plot on the effect
@@ -39,13 +37,19 @@ The y-axis of the forest plot on the effect sizes displays the
   prediction intervals are displayed as overlapping lines in different
   colours. The corresponding numerical results are displayed above each line:
   95\% credible intervals are found in parentheses, and 95\% predictive
-  intervals are found in brackets. Odds ratios and ratio of means are
-  reported in the original scale after exponentiation of the logarithmic
-  scale.
+  intervals are found in brackets. Odds ratios, relative risks, and ratio of
+  means are reported in the original scale after exponentiation of the
+  logarithmic scale.
 
   The y-axis for the forest plot on the SUCRA values displays the
   labels of the interventions in the network.
   The corresponding numerical results are displayed above each line.
+  Three coloured rectangles appear in the forest plot: a red rectangle for
+  SUCRA values up to 50\%, a yellow rectangular for SUCRA values between
+  50\% and 80\%, and a green rectangle for SUCRA values over 80\%.
+  Interventions falling at the green area are considered as the highest
+  ranked interventions, whilst interventions falling at the red area are
+  considered as the lowest ranked interventions.
 
   In both plots, the interventions are sorted in descending order of their
   SUCRA values.
@@ -68,7 +72,7 @@ interv_names <- c("placebo", "pramipexole", "serotonin-norepinephrine
 reuptake inhibitor", "serotonin reuptake inhibitor", "tricyclic
 antidepressant", "pergolide")
 
-# Create the league heatmap
+# Create the forest plot
 forestplot(full = res,
            compar = "placebo",
            drug_names = interv_names)
@@ -78,7 +82,7 @@ forestplot(full = res,
 Salanti G, Ades AE, Ioannidis JP. Graphical methods and numerical summaries
 for presenting results from multiple-treatment meta-analysis: an overview and
 tutorial. \emph{J Clin Epidemiol} 2011;\bold{64}(2):163--71.
-\doi{10.1016/j.jclinepi.2010.03.016}
+doi: 10.1016/j.jclinepi.2010.03.016
 }
 \seealso{
 \code{\link{run_model}}

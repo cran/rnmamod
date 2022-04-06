@@ -11,19 +11,19 @@
 #'   that is a potential effect modifier. See 'Details'.
 #' @param covar_assumption Character string indicating the structure of the
 #'   intervention-by-covariate interaction, as described in
-#'   Cooper et al., (2009). Set \code{covar_assumption} equal to
+#'   Cooper et al. (2009). Set \code{covar_assumption} equal to
 #'   \code{"exchangeable"}, \code{"independent"}, or \code{"common"}.
 #' @param n_chains Positive integer specifying the number of chains for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 2.
 #' @param n_iter Positive integer specifying the number of Markov chains for the
-#'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
+#'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 10000.
 #' @param n_burnin Positive integer specifying the number of iterations to
 #'   discard at the beginning of the MCMC sampling; an argument of the
-#'   \code{\link[R2jags]{jags}} function of the R-package
+#'   \code{\link[R2jags:jags]{jags}} function of the R-package
 #'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1000.
 #' @param n_thin Positive integer specifying the thinning rate for the
@@ -34,91 +34,63 @@
 #' @return A list of R2jags outputs on the summaries of the posterior
 #'   distribution, and the Gelman-Rubin convergence diagnostic
 #'   (Gelman et al., 1992) for the following monitored parameters for a
-#'   fixed-effect pairwise meta-analysis (PMA):
-#'   \tabular{ll}{
-#'    \code{EM} \tab The estimated summary effect measure (according to the
-#'    argument \code{measure} defined in \code{\link{run_model}}).\cr
-#'    \tab \cr
-#'    \code{dev_o} \tab The deviance contribution of each trial-arm based
-#'    on the observed outcome.\cr
-#'    \tab \cr
-#'    \code{hat_par} \tab The fitted outcome at each trial-arm.\cr
-#'    \tab \cr
-#'    \code{phi} \tab The informative missingness parameter.\cr
-#'   }
+#'   fixed-effect pairwise meta-analysis:
+#'   \item{EM}{The estimated summary effect measure (according to the argument
+#'   \code{measure} defined in \code{\link{run_model}}).}
+#'   \item{beta_all}{The estimated regression coefficient for all possible
+#'   pairwise comparisons according to the argument \code{covar_assumption}.}
+#'   \item{dev_o}{The deviance contribution of each trial-arm based on the
+#'   observed outcome.}
+#'   \item{hat_par}{The fitted outcome at each trial-arm.}
+#'   \item{phi}{The informative missingness parameter.}
 #'
-#'   For a fixed-effect network meta-analysis (NMA), the output additionally
+#'   For a fixed-effect network meta-analysis, the output additionally
 #'   includes:
-#'   \tabular{ll}{
-#'    \code{EM_ref} \tab The estimated summary effect measure
-#'    (according to the argument \code{measure} defined in
-#'    \code{\link{run_model}}) of all comparisons with the reference
-#'    intervention.\cr
-#'    \tab \cr
-#'    \code{SUCRA} \tab The surface under the cumulative ranking (SUCRA) curve
-#'    for each intervention.\cr
-#'    \tab \cr
-#'    \code{effectiveneness} \tab The ranking probability of each intervention
-#'    for every rank.\cr
-#'   }
+#'   \item{SUCRA}{The surface under the cumulative ranking (SUCRA) curve for
+#'   each intervention.}
+#'   \item{effectiveneness}{The ranking probability of each intervention for
+#'   every rank.}
 #'
-#'   For a random-effects PMA, the output additionally includes the
-#'   following elements:
-#'   \tabular{ll}{
-#'    \code{EM_pred} \tab The predicted summary effect measure
-#'    (according to the argument \code{measure} defined in
-#'    \code{\link{run_model}}).\cr
-#'    \tab \cr
-#'    \code{delta} \tab The estimated trial-specific effect measure
-#'    (according to the argument \code{measure} defined in
-#'    \code{\link{run_model}}).
-#'    For a multi-arm trial, we estimate \emph{T-1} effects, where \emph{T}
-#'    is the number of interventions in the trial.\cr
-#'    \tab \cr
-#'    \code{tau} \tab The between-trial standard deviation.\cr
-#'   }
+#'   For a random-effects pairwise meta-analysis, the output additionally
+#'   includes the following elements:
+#'   \item{EM_pred}{The predicted summary effect measure (according to the
+#'   argument \code{measure} defined in \code{\link{run_model}}).}
+#'   \item{delta}{The estimated trial-specific effect measure (according to the
+#'   argument \code{measure} defined in \code{\link{run_model}}).
+#'   For a multi-arm trial, we estimate \emph{T-1} effects, where \emph{T}
+#'   is the number of interventions in the trial.}
+#'   \item{tau}{The between-trial standard deviation.}
 #'
-#'   For a random-effects NMA, the output additionally
-#'   includes:
-#'   \tabular{ll}{
-#'    \code{pred_ref} \tab The predicted summary effect measure
-#'    (according to the argument \code{measure} defined in
-#'    \code{\link{run_model}}) of all comparisons with the reference
-#'    intervention.\cr
-#'   }
-#'   In NMA, \code{EM} and \code{EM_pred} refer to all possible pairwise
-#'   comparisons of interventions in the network. Furthermore, \code{tau} is
-#'   typically assumed to be common for all observed comparisons in the network.
+#'   In network meta-analysis, \code{EM} and \code{EM_pred} refer to all
+#'   possible pairwise comparisons of interventions in the network. Furthermore,
+#'   \code{tau} is typically assumed to be common for all observed comparisons
+#'   in the network.
 #'   For a multi-arm trial, we estimate a total \emph{T-1} of \code{delta} for
 #'   comparisons with the baseline intervention of the trial (found in the first
 #'   column of the element \bold{t}), with \emph{T} being the number of
 #'   interventions in the trial.
 #'
 #'   Furthermore, the output includes the following elements:
-#'   \tabular{ll}{
-#'    \code{leverage_o} \tab The leverage for the observed outcome
-#'    at each trial-arm.\cr
-#'    \tab \cr
-#'    \code{sign_dev_o} \tab The sign of the difference between
-#'    observed and fitted outcome at each trial-arm.\cr
-#'    \tab \cr
-#'    \code{model_assessment} \tab A data-frame on the measures of
-#'    model assessment: deviance information criterion,
-#'    number of effective parameters, and total residual deviance.\cr
-#'    \tab \cr
-#'    \code{jagsfit} \tab An object of S3 class \code{\link[R2jags]{jags}}
-#'    with the posterior results on all monitored parameters to be used
-#'    in the \code{\link{mcmc_diagnostics}} function.\cr
-#'   }
+#'   \item{leverage_o}{The leverage for the observed outcome at each trial-arm.}
+#'   \item{sign_dev_o}{The sign of the difference between observed and fitted
+#'   outcome at each trial-arm.}
+#'   \item{model_assessment}{A data-frame on the measures of model assessment:
+#'   deviance information criterion, number of effective parameters, and total
+#'   residual deviance.}
+#'   \item{jagsfit}{An object of S3 class \code{\link[R2jags:jags]{jags}} with
+#'   the posterior results on all monitored parameters to be used in the
+#'   \code{\link{mcmc_diagnostics}} function.}
+#'
 #'   The \code{run_metareg} function also returns the arguments \code{data},
-#'   \code{measure}, \code{model}, \code{assumption}, \code{heter_prior},
-#'   \code{mean_misspar}, \code{var_misspar}, and \code{D}
-#'   that have been specified by the user in \code{\link{run_model}} (see
-#'   'Arguments' in \code{\link{run_model}}).
+#'   \code{measure}, \code{model}, \code{assumption}, \code{covariate},
+#'   \code{covar_assumption}, \code{n_chains}, \code{n_iter}, \code{n_burnin},
+#'   and \code{n_thin} to be inherited by other relevant functions of the
+#'   package.
 #'
 #' @details \code{run_metareg} inherits the arguments \code{data},
 #'   \code{measure}, \code{model}, \code{assumption}, \code{heter_prior},
-#'   \code{mean_misspar}, and \code{var_misspar} from \code{\link{run_model}}
+#'   \code{mean_misspar}, \code{var_misspar}, \code{D}, \code{ref},
+#'   \code{indic}, and \code{base_risk} from \code{\link{run_model}}
 #'   (now contained in the argument \code{full}). This prevents specifying a
 #'   different Bayesian model from that considered in \code{\link{run_model}}.
 #'   Therefore, the user needs first to apply \code{\link{run_model}}, and then
@@ -129,7 +101,7 @@
 #'   other functions of the package to be processed further and provide an
 #'   end-user-ready output.
 #'
-#'   The models described in Spineli (2019), and Spineli et al., (2021) have
+#'   The models described in Spineli et al. (2021), and Spineli (2019) have
 #'   been extended to incorporate one \emph{study-level covariate} variable
 #'   following the assumptions of Cooper et al. (2009) for the structure of the
 #'   intervention-by-covariate interaction. The covariate can be either a
@@ -141,23 +113,25 @@
 #' @seealso \code{\link[R2jags]{jags}}, \code{\link{run_model}}
 #'
 #' @references
-#' Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
-#' data in network meta-analysis: a one-stage pattern-mixture model approach.
-#' \emph{Stat Methods Med Res} 2021. \doi{10.1177/0962280220983544}
-#'
-#' Spineli LM. An empirical comparison of Bayesian modelling strategies for
-#' missing binary outcome data in network meta-analysis.
-#' \emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
-#' \doi{10.1186/s12874-019-0731-y}
-#'
 #' Cooper NJ, Sutton AJ, Morris D, Ades AE, Welton NJ. Addressing between-study
 #' heterogeneity and inconsistency in mixed treatment comparisons: Application
 #' to stroke prevention treatments in individuals with non-rheumatic atrial
 #' fibrillation. \emph{Stat Med} 2009;\bold{28}(14):1861--81.
-#' \doi{10.1002/sim.3594}
+#' doi: 10.1002/sim.3594
 #'
 #' Gelman A, Rubin DB. Inference from iterative simulation using multiple
-#' sequences. \emph{Stat Sci} 1992;\bold{7}:457--472.
+#' sequences. \emph{Stat Sci} 1992;\bold{7}(4):457--72.
+#' doi: 10.1214/ss/1177011136
+#'
+#' Spineli LM, Kalyvas C, Papadimitropoulou K. Continuous(ly) missing outcome
+#' data in network meta-analysis: a one-stage pattern-mixture model approach.
+#' \emph{Stat Methods Med Res} 2021;\bold{30}(4):958--75.
+#' doi: 10.1177/0962280220983544
+#'
+#' Spineli LM. An empirical comparison of Bayesian modelling strategies for
+#' missing binary outcome data in network meta-analysis.
+#' \emph{BMC Med Res Methodol} 2019;\bold{19}(1):86.
+#' doi: 10.1186/s12874-019-0731-y
 #'
 #' @examples
 #' data("nma.baker2009")
@@ -190,6 +164,10 @@ run_metareg <- function(full,
                         n_burnin,
                         n_thin) {
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
 
   data <- full$data
   measure <- full$measure
@@ -199,31 +177,57 @@ run_metareg <- function(full,
   mean_misspar <- full$mean_misspar
   var_misspar <- full$var_misspar
   D <- full$D
+  ref <- full$ref
+  indic <- full$indic
+  base_risk <- full$base_risk
 
   # Prepare the dataset for the R2jags
   item <- data_preparation(data, measure)
 
   # Missing and default arguments
   covariate <- if (missing(covariate)) {
-    stop("The argument 'covariate' needs to be defined", call. = FALSE)
+    stop("The argument 'covariate' needs to be defined.", call. = FALSE)
   } else {
     covariate
   }
   covar_assumption <- if (missing(covar_assumption)) {
     stop("The argument 'covar_assumption' needs to be defined.",
          call. = FALSE)
-    #"NO"
   } else if (!is.element(covar_assumption,
                          c("exchangeable", "independent", "common"))) {
-    stop("Insert 'NO', 'exchangeable', 'independent', or 'common'",
+    stop("Insert 'exchangeable', 'independent', or 'common'.",
          call. = FALSE)
   } else {
     covar_assumption
   }
-  n_chains <- ifelse(missing(n_chains), 2, n_chains)
-  n_iter <- ifelse(missing(n_iter), 10000, n_iter)
-  n_burnin <- ifelse(missing(n_burnin), 1000, n_burnin)
-  n_thin <- ifelse(missing(n_thin), 1, n_thin)
+  n_chains <- if (missing(n_chains)) {
+    2
+  } else if (n_chains < 1) {
+    stop("The argument 'n_chains' must be a positive integer.", call. = FALSE)
+  } else {
+    n_chains
+  }
+  n_iter <- if (missing(n_iter)) {
+    10000
+  } else if (n_iter < 1) {
+    stop("The argument 'n_iter' must be a positive integer.", call. = FALSE)
+  } else {
+    n_iter
+  }
+  n_burnin <- if (missing(n_burnin)) {
+    1000
+  } else if (n_burnin < 1) {
+    stop("The argument 'n_burnin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_burnin
+  }
+  n_thin <- if (missing(n_thin)) {
+    1
+  } else if (n_thin < 1) {
+    stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
+  } else {
+    n_thin
+  }
 
   # Data in list format for R2jags
   data_jag <- list("m" = item$m,
@@ -232,14 +236,15 @@ run_metareg <- function(full,
                    "na" = item$na,
                    "nt" = item$nt,
                    "ns" = item$ns,
-                   "ref" = item$ref,
+                   "ref" = ref,
                    "I" = item$I,
+                   "indic" = indic,
                    "D" = D)
 
   data_jag <- if (is.element(measure, c("MD", "SMD", "ROM"))) {
     append(data_jag, list("y.o" = item$y0, "se.o" = item$se0))
-  } else if (measure == "OR") {
-    append(data_jag, list("r" = item$r))
+  } else if (!is.element(measure, c("MD", "SMD", "ROM"))) {
+    append(data_jag, list("r" = item$r, "base_risk" = base_risk))
   }
 
   data_jag <- if (length(unique(covariate)) > 2) {
@@ -274,9 +279,7 @@ run_metareg <- function(full,
 
   param_jags <- c("delta",
                   "EM",
-                  "EM.ref",
                   "EM.pred",
-                  "pred.ref",
                   "tau",
                   "beta",
                   "beta.all",
@@ -297,7 +300,7 @@ run_metareg <- function(full,
     param_jags
   } else {
     param_jags[!is.element(param_jags,
-                           c("EM.pred", "pred.ref", "tau", "delta"))]
+                           c("EM.pred", "tau", "delta"))]
   }
 
   # Run the Bayesian analysis
@@ -318,14 +321,8 @@ run_metareg <- function(full,
   # Effect size of all unique pairwise comparisons
   EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
 
-  # Effect size of all comparisons with the reference intervention
-  EM_ref <- t(get_results %>% dplyr::select(starts_with("EM.ref[")))
-
   # Predictive effects of all unique pairwise comparisons
   EM_pred <- t(get_results %>% dplyr::select(starts_with("EM.pred[")))
-
-  # Predictive effects of all comparisons with the reference intervention
-  pred_ref <- t(get_results %>% dplyr::select(starts_with("pred.ref[")))
 
   # Between-trial standard deviation
   tau <- t(get_results %>% dplyr::select(starts_with("tau")))
@@ -350,12 +347,25 @@ run_metareg <- function(full,
     starts_with("effectiveness")))
 
   # Estimated missingness parameter
-  phi <- if (length(unique(na.omit(unlist(item$m)))) > 1) {
+  #phi <- if (length(unique(na.omit(unlist(item$m)))) > 1) {
+  #  t(get_results %>% dplyr::select(starts_with("phi") |
+  #                                   starts_with("mean.phi") |
+  #                                   starts_with("mean.phi[") |
+  #                                   starts_with("phi[")))
+  #} else {
+  #  NULL
+  #}
+  phi <- if (min(na.omit(unlist(item$I))) == 1 &
+             max(na.omit(unlist(item$I))) == 1) {
     t(get_results %>% dplyr::select(starts_with("phi") |
-                                     starts_with("mean.phi") |
-                                     starts_with("mean.phi[") |
-                                     starts_with("phi[")))
-  } else {
+                                      starts_with("mean.phi") |
+                                      starts_with("mean.phi[") |
+                                      starts_with("phi[")))
+  } else if (min(na.omit(unlist(item$I))) == 0 &
+             max(na.omit(unlist(item$I))) == 1) {
+    t(get_results %>% dplyr::select(starts_with("phi[")))
+  } else if (min(na.omit(unlist(item$I))) == 0 &
+             max(na.omit(unlist(item$I))) == 0) {
     NULL
   }
 
@@ -446,13 +456,16 @@ run_metareg <- function(full,
                        covariate = covariate,
                        covar_assumption = covar_assumption,
                        jagsfit = jagsfit,
-                       data = data)
-    nma_results <- append(ma_results, list(EM_ref = EM_ref,
-                                           pred_ref = pred_ref,
-                                           SUCRA = SUCRA,
+                       data = data,
+                       n_chains = n_chains,
+                       n_iter = n_iter,
+                       n_burnin = n_burnin,
+                       n_thin = n_thin,
+                       type = "nmr")
+    nma_results <- append(ma_results, list(SUCRA = SUCRA,
                                            effectiveness = effectiveness,
                                            D = full$D))
-  } else {
+  } else if (model == "FE") {
     ma_results <- list(EM = EM,
                        beta_all = beta_all,
                        dev_o = dev_o,
@@ -467,9 +480,13 @@ run_metareg <- function(full,
                        covariate = covariate,
                        covar_assumption = covar_assumption,
                        jagsfit = jagsfit,
-                       data = data)
-    nma_results <- append(ma_results, list(EM_ref = EM_ref,
-                                           SUCRA = SUCRA,
+                       data = data,
+                       n_chains = n_chains,
+                       n_iter = n_iter,
+                       n_burnin = n_burnin,
+                       n_thin = n_thin,
+                       type = "nmr")
+    nma_results <- append(ma_results, list(SUCRA = SUCRA,
                                            effectiveness = effectiveness,
                                            D = full$D))
   }

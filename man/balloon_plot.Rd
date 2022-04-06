@@ -16,22 +16,17 @@ and the second element to the 'control' intervention of the comparison.}
 
 \item{drug_names}{A vector of labels with the name of the interventions
 in the order they appear in the argument \code{data} of
-\code{\link{run_model}}. If the argument \code{drug_names} is not defined,
-the order of the interventions as they appear in
-\code{data} is used, instead.}
+\code{\link{run_model}}.}
 }
 \value{
 \code{balloon_plot} returns two enhanced balloon plots for one
   comparison (see 'Details'):
-  \tabular{ll}{
-   \code{Plot_effect_size} \tab The enhanced balloon plot for the
-   summary effect size (according to the argument \code{measure} inherited
-   by \code{\link{run_sensitivity}}) of one pairwise comparison.\cr
-   \tab \cr
-   \code{Plot_tau} \tab The enhanced balloon plot for tau. When the
-   fixed-effect model has been performed in \code{\link{run_sensitivity}},
-   the function will not return the \code{Plot_tau}.\cr
-}
+  \item{plot_effect_size}{The enhanced balloon plot for the
+  summary effect size (according to the argument \code{measure} inherited
+  by \code{\link{run_sensitivity}}) for one pairwise comparison.}
+  \item{plot_tau}{The enhanced balloon plot for \emph{tau}. When the
+  fixed-effect model has been performed in \code{\link{run_sensitivity}},
+  the function will not return the \code{plot_tau}.}
 }
 \description{
 Creates the enhanced balloon plot for the summary effect size and
@@ -41,8 +36,8 @@ Creates the enhanced balloon plot for the summary effect size and
   \code{\link{run_sensitivity}}.
 }
 \details{
-For the \code{Plot_effect_size} of the selected pairwise
-  comparison, the different colours and sizes of the bubbles reflect the
+For the \code{plot_effect_size} of the selected pairwise comparison,
+  the different colours and sizes of the bubbles reflect the
   posterior standard deviation and the posterior mean, respectively.
   A colour key appears below the plot.
   The size of the bubble is proportional to the corresponding posterior mean.
@@ -56,15 +51,15 @@ For the \code{Plot_effect_size} of the selected pairwise
   the x-axis refers to the 'experimental' intervention, and the y-axis refers
   to the 'control' intervention.
 
-  The same enhanced balloon plot is created for tau (\code{Plot_tau}).
+  The same enhanced balloon plot is created for \emph{tau} (\code{plot_tau}).
   However, filled bubbles indicate low statistical heterogeneity
-  (the posterior median of tau is lower than the median of the
+  (the posterior median of \emph{tau} is lower than the median of the
   prior distribution for the heterogeneity parameter),
   and crossed bubbles indicate considerable statistical heterogeneity
-  (the posterior median of tau exceeds the median of the prior
+  (the posterior median of \emph{tau} exceeds the median of the prior
   distribution for the heterogeneity parameter).
 
-  \code{balloon_plot_mod} can be used only when missing participant
+  \code{balloon_plot} can be used only when missing participant
   outcome data have been extracted for at least one trial.
   Otherwise, the execution of the function will be stopped and an error
   message will be printed on the R console.
@@ -89,7 +84,7 @@ balloon_plot(sens = res_sens,
 Spineli LM, Kalyvas C, Papadimitropoulou K. Quantifying the robustness of
 primary analysis results: A case study on missing outcome data in pairwise
 and network meta-analysis. \emph{Res Synth Methods}
-2021;\bold{12}(4):475--490. \doi{10.1002/jrsm.1478}
+2021;\bold{12}(4):475--490. doi: https://doi.org/10.1002/jrsm.1478
 }
 \seealso{
 \code{\link{run_model}}, \code{\link{run_sensitivity}}

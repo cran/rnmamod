@@ -1,4 +1,4 @@
-#' End-user-ready results for series of pairwise meta-analyses
+#' End-user-ready results for a series of pairwise meta-analyses
 #'
 #' @description Facilitates the comparison of the consistency model
 #'   (via \code{\link{run_model}}) with a series of pairwise meta-analyses
@@ -16,13 +16,15 @@
 #'   the order of the interventions as they appear in \code{data} is used,
 #'   instead.
 #' @param save_xls Logical to indicate whether to export the tabulated results
-#'   to an 'xlsx' file at the working directory of the user.
-#'   The default is \code{FALSE} (do not export).
+#'   to an 'xlsx' file (via the \code{\link[writexl:write_xlsx]{write_xlsx}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=writexl}{writexl}) at the working
+#'   directory of the user. The default is \code{FALSE} (do not export).
 #'
 #' @return The R console prints the data-frame with the estimated summary effect
 #'   sizes and between-trial standard deviation of comparisons under both
 #'   models. The comparisons have at least two trials. In the case of a
-#'   fixed-effect model, the data-frame is printed without results on
+#'   fixed-effect model, the data-frame is printed without the results on the
 #'   between-trial standard deviation.
 #'
 #'   Furthermore, \code{series_meta_plot} exports the data-frame to an 'xlsx'
@@ -30,13 +32,28 @@
 #'
 #'   \code{series_meta_plot} returns a panel of two forest plots: (1) a
 #'   forest plot on the posterior mean and 95\% credible interval of the summary
-#'   effect size of the observed comparisons from network meta-analysis and the
+#'   effect size for the observed comparisons from network meta-analysis and the
 #'   corresponding pairwise meta-analyses, and (2) a forest plot on the
 #'   posterior median and 95\% credible interval of the between-trial standard
-#'   deviation for these observed comparisons. The estimated
-#'   between-trial standard deviation from network meta-analysis appears as a
-#'   rectangle in the forest plot. When a fixed-effect model has been fitted,
-#'   only the forest plot on the estimated summary effect sizes is shown.
+#'   deviation for these observed comparisons. The estimated median and 95\%
+#'   credible intervals of the between-trial standard deviation from network
+#'   meta-analysis appear in the forest plot as a solid and two dotted parallel
+#'   blue lines, respectively. The different levels of heterogeneity appear as
+#'   green, yellow, orange, and red rectangles to indicate a low, reasonable,
+#'   fairly high, and fairly extreme heterogeneity, respectively, following the
+#'   classification of Spiegelhalter et al. (2004).
+#'   When a fixed-effect model has been fitted, only the forest plot on the
+#'   estimated summary effect sizes is shown.
+#'
+#' @details \code{series_meta_plot} can be used only for a network of
+#'   interventions. Otherwise, the execution of the function will be stopped and
+#'   an error message will be printed on the R console.
+#'
+#'   For a binary outcome, when \code{measure} is "RR" (relative risk) or "RD"
+#'   (risk difference) in \code{\link{run_model}}, \code{series_meta_plot}
+#'   currently presents the results in the odds ratio for being the
+#'   \strong{base-case} effect measure in \code{\link{run_model}} for a binary
+#'   outcome (see also 'Details' in \code{\link{run_model}}).
 #'
 #'   The user can detect any inconsistencies in the estimated
 #'   effects from the compared models and explore the gains in precision
@@ -44,13 +61,14 @@
 #'   investigate the plausibility of the common between-trial heterogeneity
 #'   assumption which is typically considered in network meta-analysis.
 #'
-#' @details \code{series_meta_plot} can be used only for a network of
-#'   interventions. Otherwise, the execution of the function will be stopped and
-#'   an error message will be printed on the R console.
-#'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{run_model}}, \code{\link{run_series_meta}}
+#' @seealso \code{\link{run_model}}, \code{\link{run_series_meta}},
+#'   \code{\link[writexl:write_xlsx]{write_xlsx}}
+#'
+#' @references
+#' Spiegelhalter DJ, Abrams KR, Myles JP. Bayesian approaches to clinical trials
+#' and health-care evaluation. John Wiley and Sons, Chichester, 2004.
 #'
 #' @examples
 #' data("nma.dogliotti2014")
@@ -75,6 +93,16 @@
 #' @export
 series_meta_plot <- function(full, meta, drug_names, save_xls) {
 
+  if (full$type != "nma" || is.null(full$type)) {
+    stop("'full' must be an object of S3 class 'run_model'.",
+         call. = FALSE)
+  }
+
+  if (meta$type != "series" || is.null(meta$type)) {
+    stop("'meta' must be an object of S3 class 'run_series_meta'.",
+         call. = FALSE)
+  }
+
   save_xls <- if (missing(save_xls)) {
     FALSE
   } else {
@@ -83,10 +111,8 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
 
   drug_names <- if (missing(drug_names)) {
     aa <- "The argument 'drug_names' has not been defined."
-    bb <- "The intervention ID, as specified in 'data' is used as"
-    cc <- "intervention names"
-    message(cat(paste0("\033[0;", col = 32, "m", aa, " ", bb, " ", cc,
-                       "\033[0m", "\n")))
+    bb <- "The intervention ID, as specified in 'data' is used, instead."
+    message(paste(aa, bb))
     nt <- length(full$SUCRA[, 1])
     as.character(1:nt)
   } else {
@@ -94,15 +120,26 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   }
 
   if (length(drug_names) < 3) {
-    stop("This function is *not* relevant for a pairwise meta-analysis",
+    stop("This function is *not* relevant for a pairwise meta-analysis.",
          call. = FALSE)
   }
 
   # Posterior results on the effect estimates under NMA
-  em_full0 <- full$EM
+  measure <- if (is.element(full$measure, c("RR", "RD"))) {
+    "OR"
+  } else {
+    full$measure
+  }
+  em_full0 <- if (is.element(full$measure, c("RR", "RD"))) {
+    full$EM_LOR
+  } else {
+    full$EM
+  }
 
   # Posterior results on the effect estimates under separate MAs
-  em_meta0 <- meta$EM
+  # Keep only comparisons with at least two trials
+  em_meta0 <- meta$EM[meta$single == 0, ]
+  rownames(em_meta0) <- seq_len(length(em_meta0[, 1]))
 
   # Posterior results on between-trial standard deviation under NMA
   tau_full <- full$tau
@@ -111,10 +148,13 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   tau_meta <- meta$tau
 
   # Possible and observed comparisons
-  possible_comp <- possible_observed_comparisons(drug_names,
-                                                 obs_comp =
-                                                   paste0(meta$EM[, "t2"], "vs",
-                                                          meta$EM[, "t1"]))
+  possible_comp <-
+    possible_observed_comparisons(drug_names,
+                                  obs_comp =
+                                    paste0(
+                                      meta$EM[meta$single == 0, "t2"], "vs",
+                                      meta$EM[meta$single == 0, "t1"])
+                                  )
 
   # Observed comparisons
   obs_comp <- possible_comp$obs_comp[, 3]
@@ -124,23 +164,23 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   # Keep only the comparisons with at least two trials
   em_full <- em_full0[is.element(possible_comp$poss_comp[, 4], obs_comp),
                       c(1:3, 7)]
-  em_full[, c(1, 3:4)] <- if (is.element(full$measure, c("OR", "ROM"))) {
+  em_full[, c(1, 3:4)] <- if (is.element(measure, c("OR", "ROM"))) {
     exp(em_full[, c(1, 3:4)])
-  } else if (is.element(full$measure, c("MD", "SMD"))) {
+  } else if (is.element(measure, c("MD", "SMD"))) {
     em_full[, c(1, 3:4)]
   }
   em_full_clean <- format(round(em_full, 2), nsmall = 2)
 
   # Effect estimate of separate MAs
   em_meta <- round(em_meta0[, c(3:5, 9)], 2)
-  em_meta[, c(1, 3:4)] <- if (is.element(full$measure, c("OR", "ROM"))) {
+  em_meta[, c(1, 3:4)] <- if (is.element(measure, c("OR", "ROM"))) {
     exp(em_meta[, c(1, 3:4)])
-  } else if (is.element(full$measure, c("MD", "SMD"))) {
+  } else if (is.element(measure, c("MD", "SMD"))) {
     em_meta[, c(1, 3:4)]
   }
   em_meta_clean <- format(round(em_meta, 2), nsmall = 2)
 
-  # Between-trial standard deviation of separate MAs
+  # Between-trial standard deviation of separate MAs  5, 2:3, 7
   if (model == "RE") {
     tau_meta_clean <- format(round(tau_meta[, c(7, 4:5, 9)], 2), nsmall = 2)
   } else {
@@ -148,7 +188,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   }
 
   # Credible intervals for comparisons with at least two trials
-  cri_full_clean <- if (is.element(full$measure, c("OR", "ROM"))) {
+  cri_full_clean <- if (is.element(measure, c("OR", "ROM"))) {
     paste0("(", em_full_clean[, 3], ",", " ", em_full_clean[, 4], ")",
            ifelse(as.numeric(em_full_clean[, 3]) > 1 |
                     as.numeric(em_full_clean[, 4]) < 1, "*", " "))
@@ -159,7 +199,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   }
 
   # The 95% CrIs of the effect estimate of separate MAs
-  cri_meta_clean <- if (is.element(full$measure, c("OR", "ROM"))) {
+  cri_meta_clean <- if (is.element(measure, c("OR", "ROM"))) {
     paste0("(", em_meta_clean[, 3], ",", " ", em_meta_clean[, 4], ")",
            ifelse(as.numeric(em_meta_clean[, 3]) > 1 |
                     as.numeric(em_meta_clean[, 4]) < 1, "*", " "))
@@ -226,25 +266,21 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   }
 
   # Forest plots of comparisons on effect estimate
-  add <- ifelse(is.element(full$measure, c("OR", "ROM")), 1, 4)
-  measure <- effect_measure_name(full$measure)
+  add <- ifelse(is.element(measure, c("OR", "ROM")), 1, 4)
+  measure2 <- effect_measure_name(measure, lower = FALSE)
 
-  caption <- if (full$D == 0 & is.element(measure,
-                                          c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours the first arm; if",
-          measure, "> 1, favours thr second arm")
-  } else if (full$D == 1 & is.element(measure,
-                                      c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 1, favours the second arm",
-          "; if", measure, "> 1, favours the first arm")
-  } else if (full$D == 0 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours the first arm; if",
-          measure, "> 0, favours the second arm")
-  } else if (full$D == 1 & !is.element(measure,
-                                       c("Odds ratio", "Ratio of means"))) {
-    paste("If", measure, "< 0, favours the second arm",
-          "; if", measure, "> 0, favours the first arm")
+  caption <- if (full$D == 0 & is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 1, favours the first arm.",
+          measure2, "> 1, favours the second arm.")
+  } else if (full$D == 1 & is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 1, favours the second arm.",
+          measure2, "> 1, favours the first arm.")
+  } else if (full$D == 0 & !is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 0, favours the first arm.",
+          measure2, "> 0, favours the second arm.")
+  } else if (full$D == 1 & !is.element(measure, c("OR", "ROM"))) {
+    paste(measure2, "< 0, favours the second arm.",
+          measure2, "> 0, favours the first arm.")
   }
 
   p1 <- ggplot(data = prepare,
@@ -257,7 +293,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
           geom_linerange(size = 2,
                          position = position_dodge(width = 0.5)) +
           geom_hline(yintercept =
-                       ifelse(!is.element(full$measure, c("OR", "ROM")), 0, 1),
+                       ifelse(!is.element(measure, c("OR", "ROM")), 0, 1),
                      lty = 1,
                      size = 1,
                      col = "grey53") +
@@ -275,37 +311,19 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                     color = "black",
                     size = 4.0,
                     position = position_dodge(width = 0.5)) +
-          #geom_text(aes(x = 0.45,
-          #              y = ifelse(is.element(full$measure, c("OR", "ROM")),
-          #                         0.4, -0.2*add),
-          #              label = ifelse(full$D == 0, "Favours first arm",
-          #                             "Favours second arm")),
-          #          size = 3.5,
-          #          vjust = 0,
-          #          hjust = 0,
-          #          color = "black") +
-          #geom_text(aes(x = 0.45,
-          #              y = ifelse(is.element(full$measure, c("OR", "ROM")),
-          #                         1.2, 0.2),
-          #              label = ifelse(full$D == 0, "Favours second arm",
-          #                             "Favours first arm")),
-          #         size = 3.5,
-          #          vjust = 0,
-          #          hjust = 0,
-          #          color = "black") +
-          labs(x = "",
-               y = effect_measure_name(full$measure),
-               colour = "Analysis",
-               caption = caption) +
           scale_x_discrete(breaks = as.factor(seq_len(length(obs_comp))),
                            labels = prepare$comparison[
                              seq_len(length(obs_comp))]) +
           scale_y_continuous(trans =
-                               ifelse(!is.element(full$measure, c("OR", "ROM")),
+                               ifelse(!is.element(measure, c("OR", "ROM")),
                                       "identity", "log10")) +
           scale_color_manual(breaks = c("Network meta-analysis",
                                         "Pairwise meta-analysis"),
                              values = c("#009E73", "#D55E00")) +
+          labs(x = "",
+               y = measure2,
+               colour = "Analysis",
+               caption = caption) +
           coord_flip() +
           theme_classic() +
           theme(axis.text.x = element_text(color = "black", size = 12),
@@ -315,27 +333,42 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                 legend.position = "bottom", legend.justification = c(0.13, 0),
                 legend.text =  element_text(color = "black", size = 12),
                 legend.title =  element_text(color = "black", face = "bold",
-                                             size = 12))
+                                             size = 12),
+                plot.caption = element_text(hjust = 0.01))
 
   # Forest plots of comparisons-specific between-trial standard deviation
   p2 <- if (model == "RE") {
-    ggplot(data = prepare_tau,
+   ggplot(data = prepare_tau,
            aes(x = as.factor(seq_len(length(obs_comp))),
                y = as.numeric(median),
                ymin = as.numeric(lower),
                ymax = as.numeric(upper))) +
-      geom_rect(aes(xmin = 0,
-                    xmax = Inf,
-                    ymin = tau_full[3],
-                    ymax = tau_full[7]),
-                fill = "#1f93ff",
-                alpha = 0.1) +
-      geom_linerange(size = 2,
-                     position = position_dodge(width = 0.5)) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.099,
+                    fill = "low"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.1, ymax = 0.5,
+                    fill = "reasonable"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 1.0,
+                    fill = "fairly high"),
+                alpha = 0.02) +
+      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 1.0, ymax = Inf,
+                    fill = "fairly extreme"),
+                alpha = 0.02) +
       geom_hline(yintercept = tau_full[5],
                  lty = 1,
                  size = 1,
                  col = "#006CD1") +
+      geom_hline(yintercept = tau_full[3],
+                 lty = 3,
+                 size = 1,
+                 col = "#006CD1") +
+      geom_hline(yintercept = tau_full[7],
+                 lty = 3,
+                 size = 1,
+                 col = "#006CD1") +
+      geom_linerange(size = 2,
+                     position = position_dodge(width = 0.5)) +
       geom_point(size = 1.5,
                  colour = "white",
                  stroke = 0.3,
@@ -356,21 +389,30 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
       scale_x_discrete(breaks = as.factor(seq_len(length(obs_comp))),
                        labels = prepare_tau$comparison[
                          seq_len(length(obs_comp))]) +
-      labs(x = "", y = "Between-trial standard deviation") +
+      scale_fill_manual(name = "Heterogeneity",
+                        values = c("low" = "#009E73",
+                                   "reasonable" = "orange",
+                                   "fairly high" = "#D55E00",
+                                   "fairly extreme" = "red")) +
+      labs(x = "", y = "Between-trial standard deviation", caption = " ") +
       coord_flip() +
       theme_classic() +
       theme(axis.text.x = element_text(color = "black", size = 12),
             axis.text.y = element_text(color = "black", size = 12),
             axis.title.x = element_text(color = "black", face = "bold",
-                                        size = 12))
-  } else {
-    NA
+                                        size = 12),
+            legend.position = "bottom",
+            legend.text =  element_text(color = "black", size = 12),
+            legend.title =  element_text(color = "black", face = "bold",
+                                         size = 12))
   }
 
   # Bring together both forest-plots
   forest_plots <- if (model == "RE") {
-    ggarrange(p1, p2, nrow = 1, ncol = 2, labels = c("A)", "B)"),
-              common.legend = TRUE, legend = "bottom")
+    ggarrange(p1, p2 + guides(fill = guide_legend(override.aes =
+                                                    list(alpha = 0.4))),
+              nrow = 1, ncol = 2, labels = c("A)", "B)"),
+              common.legend = FALSE, legend = "bottom")
   } else {
     p1
   }
@@ -380,6 +422,9 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
     write_xlsx(em_both, paste0("Table.NMA.vs.PMA", ".xlsx"))
   }
 
-  return(list(tabulated_results = knitr::kable(em_both),
+  return(list(tabulated_results =
+                knitr::kable(em_both,
+                             caption =
+                               "Estimation for each observed comparison"),
               forest_plots = forest_plots))
 }

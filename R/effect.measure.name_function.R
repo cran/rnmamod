@@ -1,14 +1,26 @@
-effect_measure_name <- function(name) {
+effect_measure_name <- function(x, lower) {
 
-  spell_out <- if (name == "OR") {
-    "Odds ratio"
-  } else if (name == "MD") {
-    "Mean difference"
-  } else if (name == "SMD") {
-    "Standardised mean difference"
-  } else if (name == "ROM") {
-    "Ratio of means"
+  abbrev <- c("OR", "RR", "RD", "MD", "SMD", "ROM")
+  name1 <- c("Odds ratio",
+            "Relative risk",
+            "Risk difference",
+            "Mean difference",
+            "Standardised mean difference",
+            "Ratio of means")
+
+  name2 <- c("odds ratio",
+             "relative risk",
+             "risk difference",
+             "mean difference",
+             "standardised mean difference",
+             "ratio of means")
+
+  if (is.element(x, abbrev) & lower == FALSE) {
+    name1[which(x == abbrev)]
+  } else if (is.element(x, abbrev) & lower == TRUE) {
+    name2[which(x == abbrev)]
+  } else if (!is.element(x, abbrev))  {
+    message("Insert 'OR', 'RR', 'RD', 'MD', 'SMD', or 'ROM'")
   }
 
-  return(spell_out)
 }

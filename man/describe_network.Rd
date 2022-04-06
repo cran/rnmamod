@@ -11,45 +11,34 @@ describe_network(data, drug_names, measure)
 data of each trial. See 'Format' in \code{\link{run_model}}.}
 
 \item{drug_names}{A vector of labels with the name of the interventions in
-the order they appear in the argument \code{data}. If \code{drug_names} is
-not defined, the order of the interventions as they appear in \code{data}
-is used, instead.}
+the order they appear in the argument \code{data}.}
 
-\item{measure}{Character string indicating the effect measure with values
-\code{"OR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"} for the odds ratio,
-mean difference, standardised mean difference and ratio of means,
-respectively.}
+\item{measure}{Character string indicating the effect measure. For a binary
+outcome, the following can be considered: \code{"OR"}, \code{"RR"} or
+\code{"RD"} for the odds ratio, relative risk, and risk difference,
+respectively. For a continuous outcome, the following can be considered:
+\code{"MD"}, \code{"SMD"}, or \code{"ROM"} for mean difference,
+standardised mean difference and ratio of means, respectively.}
 }
 \value{
 A list of scalar results and two data-frames to be passed to
   \code{\link{netplot}}. The scalar results include:
-  \tabular{ll}{
-   \code{direct_comp} \tab The number of observed comparisons in the
-   network. \cr
-   \tab \cr
-   \code{two_arm_ns} \tab The number of two-arm trials in the network. \cr
-   \tab \cr
-   \code{multi_arm_ns} \tab The number of multi-arm trials in the
-   network. \cr
-   \tab \cr
-   \code{total_rand_network} \tab The total number of randomised participants
-    in the network. \cr
-   \tab \cr
-   \code{prop_obs_network} \tab The proportion of participants who completed
-    the trial. \cr
-   \tab \cr
-   \code{prop_event_network} \tab The proportion of observed events in the
-   network. When the outcome is continuous, this element is omitted. \cr
-   \tab \cr
-   \code{trial_zero_event} \tab The number of trials with at least one arm
-   with zero events. When the outcome is continuous, this element is
-   omitted. \cr
-   \tab \cr
-   \code{trial_all_zero_event} \tab The number of trials with zero events in
-   all arms. When the outcome is continuous, this element is omitted. \cr
-  }
+  \item{direct_comp}{The number of observed comparisons in the network.}
+  \item{two_arm_ns}{The number of two-arm trials in the network.}
+  \item{multi_arm_ns}{The number of multi-arm trials in the network.}
+  \item{total_rand_network}{The total number of randomised participants
+  in the network.}
+  \item{prop_obs_network}{The proportion of participants who completed
+  the trial.}
+  \item{prop_event_network}{The proportion of observed events in the
+  network. When the outcome is continuous, this element is omitted.}
+  \item{trial_zero_event}{The number of trials with at least one arm
+  with zero events. When the outcome is continuous, this element is
+  omitted.}
+  \item{trial_all_zero_event}{The number of trials with zero events in
+  all arms. When the outcome is continuous, this element is omitted.}
 
-  The two data-frames include\code{table_interventions} and
+  The two data-frames include \code{table_interventions} and
   \code{table_comparisons}. See 'Value' in \code{\link{netplot}} for these
   data-frames.
 }
@@ -64,7 +53,7 @@ facilitate the calculations.
 }
 \seealso{
 \code{\link{data_preparation}}, \code{\link{netplot}},
-  \code{\link{run_model}},
+  \code{\link{run_model}}
 }
 \author{
 {Loukia M. Spineli}

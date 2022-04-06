@@ -2,34 +2,28 @@
 % Please edit documentation in R/Taylor.IMOR_function.R
 \name{taylor_imor}
 \alias{taylor_imor}
-\title{Pattern-mixture model with Taylor series for binary outcome}
+\title{Pattern-mixture model with Taylor series for a binary outcome}
 \format{
 The columns of the data-frame in the argument \code{data} refer to
   the following ordered elements for a binary outcome:
-  \tabular{ll}{
-   \strong{id} \tab A unique identifier for each trial.\cr
-   \tab \cr
-   \strong{r1} \tab The observed  number of events in the first arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{r2} \tab The observed  number of events in the second arm of the
-   comparison.\cr
-   \tab \cr
-   \strong{m1} \tab The number of MOD in the first arm of the comparison.\cr
-   \tab \cr
-   \strong{m2} \tab The number of MOD in the second arm of the comparison.\cr
-   \tab \cr
-   \strong{n1} \tab The number of participants randomised in the first arm of
-   the comparison.\cr
-   \tab \cr
-   \strong{n2} \tab The number of participants randomised in the second arm
-   of the comparison.\cr
-   \tab \cr
-   \strong{t1} \tab An identified for the intervention in the first arm of
-   the comparison.\cr
-   \tab \cr
-   \strong{t2} \tab An identified for the intervention in the second arm of
-   the comparison.\cr
+  \tabular{rl}{
+  \bold{id} \tab A unique identifier for each trial.\cr
+  \bold{r1} \tab The observed  number of events in the first arm of the
+  comparison.\cr
+  \bold{r2} \tab The observed  number of events in the second arm of the
+  comparison.\cr
+  \bold{m1} \tab The number of missing participants in the first arm of the
+  comparison.\cr
+  \bold{m2} \tab The number of missing participants in the second arm of the
+  comparison.\cr
+  \bold{n1} \tab The number of participants randomised in the first arm of
+  the comparison.\cr
+  \bold{n2} \tab The number of participants randomised in the second arm
+  of the comparison.\cr
+  \bold{t1} \tab An identifier for the intervention in the first arm of
+  the comparison.\cr
+  \bold{t2} \tab An identifier for the intervention in the second arm of
+  the comparison.\cr
   }
 }
 \usage{
@@ -57,38 +51,34 @@ argument is 0 and corresponds to uncorrelated missingness parameters.}
 }
 \value{
 A data-frame that additionally includes the following elements:
-  \tabular{ll}{
-   \strong{EM} \tab The odds ratio in the logarithmic scale (log OR) adjusted
-   for MOD and obtained using the Taylor series.\cr
-   \tab \cr
-   \strong{se.EM} \tab The standard error of the log OR adjusted for MOD and
-   obtained using the Taylor series.\cr
-  }
+  \item{EM}{The odds ratio in the logarithmic scale (log OR) adjusted
+  for missing participants and obtained using the Taylor series.}
+  \item{se.EM}{The standard error of the log OR adjusted for missing
+  participants and obtained using the Taylor series.}
 }
 \description{
 Applies the pattern-mixture model under a specific assumption
-  about the informative missingness parameter in trial-arms with
-  \bold{binary} missing participant outcome data (MOD) and uses the Taylor
-  series to obtain the effect size and standard error for each trial
-  (White et al., 2008).
+  about the informative missingness odds ratio in trial-arms with
+  \bold{binary} missing participant outcome data and uses the Taylor
+  series to obtain the odds ratio (in the logarithmic scale) and standard
+  error for each trial (White et al., 2008).
 }
 \details{
-The \code{taylor_imor} function is found in the
+The \code{taylor_imor} function is integrated in the
   \code{\link{unrelated_effects_plot}} function. The latter uses the
-  the \code{\link[netmeta]{pairwise}} function from the package
+  the \code{\link[netmeta:pairwise]{pairwise}} function from the package
   \href{https://CRAN.R-project.org/package=netmeta}{netmeta}
-  to transform the dataset from the wide arm-based format
-  (see, 'Arguments' for \code{data} in
-  \code{\link{unrelated_effects_plot}}) into the long-arm based
-  format.
+  to transform the dataset from the wide arm-based format into the long
+  arm-based format (see, 'Arguments' for \code{data} in
+  \code{\link{unrelated_effects_plot}}).
 }
 \references{
 White IR, Higgins JP, Wood AM. Allowing for uncertainty due to missing data
 in meta-analysis--part 1: two-stage methods.
-\emph{Stat Med} 2008;\bold{27}(5):711--27. \doi{10.1002/sim.3008}
+\emph{Stat Med} 2008;\bold{27}(5):711--27. doi: 10.1002/sim.3008
 }
 \seealso{
-\code{\link[netmeta]{pairwise}}, \code{\link{run_model}},
+\code{\link[netmeta:pairwise]{pairwise}}, \code{\link{run_model}},
   \code{\link{unrelated_effects_plot}}
 }
 \author{

@@ -1,7 +1,8 @@
 Type: Package
 Package: rnmamod
 Title: Bayesian Network Meta-Analysis with Missing Participants
-Version: 0.2.0
+Version: 0.3.0
+Date: 2022-11-01
 Authors@R: c(
     person("Loukia", "Spineli", email = "Spineli.Loukia@mh-hannover.de", 
     role = c("aut", "cre")),
@@ -28,22 +29,22 @@ Description: A comprehensive suite of functions to perform and visualise
     allows the user to export the results to an Excel file at the working 
     directory.
 License: GPL (>= 3)
-URL: https://github.com/LoukiaSpin/rnmamod
+URL: https://CRAN.R-project.org/package=rnmamod
 Depends: R (>= 4.0.0)
-Imports: coda, dplyr, fdrtool, gemtc, ggfittext, ggplot2, ggpubr,
-        ggrepel, knitr, MASS, mcmcplots, netmeta, pcnetmeta, R2jags,
-        reshape2, scales, writexl
+Imports: dplyr, fdrtool, gemtc, ggfittext, ggplot2, ggpubr, ggrepel,
+        knitr, MASS, mcmcplots, netmeta, pcnetmeta, R2jags, reshape2,
+        scales, writexl
 Suggests: rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2022-04-06 17:03:16 UTC; Loukia
+Packaged: 2022-11-01 10:22:23 UTC; Loukia
 Author: Loukia Spineli [aut, cre],
   Chrysostomos Kalyvas [ctb],
   Katerina Papadimitropoulou [ctb]
 Repository: CRAN
-Date/Publication: 2022-04-06 17:40:02 UTC
+Date/Publication: 2022-11-01 10:44:53 UTC

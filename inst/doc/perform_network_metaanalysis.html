@@ -15,7 +15,19 @@
 
 <title>Perform network meta-analysis</title>
 
-<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -25,6 +37,7 @@
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
     </style>
+
 
 
 <style type="text/css">
@@ -108,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -126,7 +146,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 
 
@@ -140,19 +340,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">Perform network meta-analysis</h1>
 <h4 class="author">Loukia M. Spineli</h4>
-<h4 class="date">Latest version: 2022-04-06</h4>
+<h4 class="date">Latest version: 2022-11-01</h4>
 
 
 <div id="TOC">
 <ul>
 <li><a href="#introduction">Introduction</a></li>
-<li><a href="#example-on-a-binary-outcome">Example on a binary outcome</a></li>
-<li><a href="#perform-bayesian-random-effects-network-meta-analysis">Perform Bayesian random-effects network meta-analysis</a>
+<li><a href="#example-on-a-binary-outcome">Example on a binary
+outcome</a></li>
+<li><a href="#perform-bayesian-random-effects-network-meta-analysis">Perform
+Bayesian random-effects network meta-analysis</a>
 <ul>
 <li><a href="#run-the-model">Run the model</a></li>
 <li><a href="#using-all-arguments">Using all arguments</a></li>
 <li><a href="#the-output">The output</a></li>
-<li><a href="#no-or-partially-extracted-missing-participant-outcome-data">No or partially extracted missing participant outcome data</a></li>
+<li><a href="#no-or-partially-extracted-missing-participant-outcome-data">No or
+partially extracted missing participant outcome data</a></li>
 </ul></li>
 <li><a href="#references">References</a></li>
 </ul>
@@ -160,18 +363,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>This vignette illustrates how to perform a one-stage Bayesian random-effects network meta-analysis with consistency equation using the <code>run_model</code> function. This function includes arguments to handle aggregate missing participant outcome data (MOD) in each arm of every trial via the pattern-mixture model.</p>
+<p>This vignette illustrates how to perform a one-stage Bayesian
+random-effects network meta-analysis with consistency equation using the
+<code>run_model</code> function. This function includes arguments to
+handle aggregate missing participant outcome data (MOD) in each arm of
+every trial via the pattern-mixture model.</p>
 </div>
 <div id="example-on-a-binary-outcome" class="section level2">
 <h2>Example on a binary outcome</h2>
-<p>We will use the network on pharmacologic interventions for chronic obstructive pulmonary disease (COPD) from the systematic review of <a href="https://pubmed.ncbi.nlm.nih.gov/19637942/">Baker et al. (2009)</a>. This network comprises 21 trials comparing seven pharmacological interventions with each other and placebo. The exacerbation of COPD (harmful outcome) is the analysed binary outcome (see <code>?nma.baker2009</code>).</p>
-<p><img src="data:image/png;base64,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ug+5XxWeXXocT9qZXX8b9llOWTxrp7uFKRMWcIsDwm6+OdXsQ+uSJrNsDq7MxZQcAczv92GQsA9fanfqMSjGk3ZmE46tjjVcIeCAgeNZNrPre1JbAIujf+vqYLDcr3pXHlRQk3bEg6e74pk4JNzNckyDBJhFrGzoDuywNLKzbKaMbSVz5/iNAFb7VUfiqH4yaUeQyr2V8bNuExhwu4nvDYUbASezbHjneuG9UQ6Y36yl83Rm6nBg8kQBxzM6ug0O4HmkLnu4QGDIwepegpoHHm0lx+/TFqyeLHULbioMcTRm5QeuhY1nvE5ZGTjBk31w5sky98HNgOfxniIn4nbA8Swb2XjZRglYDJyhjYtxVfpETJpd2lH0vKFwGgdjVrx3Kmc8y+YE7iRdHlhs+kL7Poi3g/kTRbq028GQVr5zB+J2wANJgJVy5i3vyrcjJuCe0tp3btmMWf5u0fVcSIKsVXvfuRUxAfcVD76QWmOWvV1Y7RaaQKvlxXdeS0zAvcWPL6TKOAMc6oJom2DrZSlskwpiRsD9xUfzjWMyJuA+U8PrNlXRQKzmqqP1DRq4gtiVV0RD7LiyH2DCBtYTzxt7FJuxc3c+vIQOPJfGSjp51jg54sLvDcoMABjikyExLq0ZMGYgwH5jOhWw73J1EfzAJ8lFBLMpA/d6gkl3QQ8sJ6xqUvAVZy6afgQBhxujDgGjCJxgkjlVBE4ceU+cYLIRn2BymJxgcvF2byeYdBfswFInneR26bG8UNVJfIJJ7ppWvZ1g0l2WAjgzTXVDXWouPsEkd1W6495OMOkuSwGcn2iupj2OM9frUdeVPOztBJPuskTA8akiuTOIcleG7e8Ek+6yRMCFFrxVbsH9nWDSXZYCON+bJjPTi31wjyeYdJelAM6Ph9NTD6D5pqPoPk8w6S7LAZzbos2d5JlepqfXE0y6C3rg6uA+0ABZcuCYuO9SdJelB8YeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkYeAkae/wc4PIiVCrpZ0gAAAABJRU5ErkJggg==" style="display: block; margin: auto;" /></p>
+<p>We will use the network on pharmacologic interventions for chronic
+obstructive pulmonary disease (COPD) from the systematic review of <a href="https://pubmed.ncbi.nlm.nih.gov/19637942/">Baker et
+al. (2009)</a>. This network comprises 21 trials comparing seven
+pharmacological interventions with each other and placebo. The
+exacerbation of COPD (harmful outcome) is the analysed binary outcome
+(see <code>?nma.baker2009</code>).</p>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 </div>
 <div id="perform-bayesian-random-effects-network-meta-analysis" class="section level2">
 <h2>Perform Bayesian random-effects network meta-analysis</h2>
 <div id="run-the-model" class="section level3">
 <h3>Run the model</h3>
-<p><code>run_model</code> calls the <code>jags</code> function from the <a href="https://CRAN.R-project.org/package=R2jags"><strong>R2jags</strong></a> package to perform the Bayesian analysis using the BUGS code of Dias and colleagues (2013).</p>
+<p><code>run_model</code> calls the <code>jags</code> function from the
+<a href="https://CRAN.R-project.org/package=R2jags"><strong>R2jags</strong></a>
+package to perform the Bayesian analysis using the BUGS code of Dias and
+colleagues (2013).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run_model</span>(<span class="at">data =</span> nma.baker2009,</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">measure =</span> <span class="st">&quot;OR&quot;</span>,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">heter_prior =</span> <span class="fu">list</span>(<span class="st">&quot;halfnormal&quot;</span>, <span class="dv">0</span>, <span class="dv">1</span>),</span>
@@ -180,13 +395,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_iter =</span> <span class="dv">10000</span>,</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_burnin =</span> <span class="dv">1000</span>,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_thin =</span> <span class="dv">1</span>)</span></code></pre></div>
-<p>With only the minimum required arguments, the function adjusts MOD under the missing-at-random assumption (MAR; by default) via the informative missingness odds ratio (IMOR) in the logarithmic scale (White et al. (2008)): The minimum required arguments of <code>run_model</code> include specifying:</p>
+<p>With only the minimum required arguments, the function adjusts MOD
+under the missing-at-random assumption (MAR; by default) via the
+informative missingness odds ratio (IMOR) in the logarithmic scale
+(White et al. (2008)): The minimum required arguments of
+<code>run_model</code> include specifying:</p>
 <ul>
-<li>the dataset (a data-frame with one-trial-per-row format) in <code>data</code> (see <code>?data_preparation</code>);</li>
-<li>the effect measure in <code>measure</code> (see ‘Arguments’ in <code>?run_model</code>):</li>
-<li>the prior distribution for the heterogeneity parameter in <code>heter_prior</code> (see <code>?heterogeneity_param_prior</code>);</li>
-<li>the direction of the outcome in <code>D</code> (here, <code>D = 0</code> because the outcome is harmful; see, ‘Arguments’ in <code>?run_model</code>)</li>
-<li>the number of chains in <code>n_chains</code> (see ‘Arguments’ in <code>?run_model</code> – also for the subsequent arguments);</li>
+<li>the dataset (a data-frame with one-trial-per-row format) in
+<code>data</code> (see <code>?data_preparation</code>);</li>
+<li>the effect measure in <code>measure</code> (see ‘Arguments’ in
+<code>?run_model</code>):</li>
+<li>the prior distribution for the heterogeneity parameter in
+<code>heter_prior</code> (see
+<code>?heterogeneity_param_prior</code>);</li>
+<li>the direction of the outcome in <code>D</code> (here,
+<code>D = 0</code> because the outcome is harmful; see, ‘Arguments’ in
+<code>?run_model</code>)</li>
+<li>the number of chains in <code>n_chains</code> (see ‘Arguments’ in
+<code>?run_model</code> – also for the subsequent arguments);</li>
 <li>the number of iterations in <code>n_iter</code>;</li>
 <li>the number of burn-in in <code>n_burnin</code>, and</li>
 <li>the thinning in <code>n_thin</code>.</li>
@@ -194,7 +420,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="using-all-arguments" class="section level3">
 <h3>Using all arguments</h3>
-<p>Suppose we decide to use an <em>empirically-based prior distribution for the between-trial variance</em> that aligns with the outcome and interventions under investigation. We also consider a <em>hierarchical structure for the prior normal distribution of the log IMOR that is specific to the interventions</em> in the network (<code>assumption = &quot;HIE-ARM&quot;</code>) (Turner et al., 2015a; Spineli, 2019). We still assume MAR on average with variance of log IMOR equal to 1 (<code>var_misspar = 1</code>) which is also the default argument. In this case, <code>run_model</code> must be specified as follows:</p>
+<p>Suppose we decide to use an <em>empirically-based prior distribution
+for the between-trial variance</em> that aligns with the outcome and
+interventions under investigation. We also consider a <em>hierarchical
+structure for the prior normal distribution of the log IMOR that is
+specific to the interventions</em> in the network
+(<code>assumption = &quot;HIE-ARM&quot;</code>) (Turner et al., 2015a; Spineli,
+2019). We still assume MAR on average with variance of log IMOR equal to
+1 (<code>var_misspar = 1</code>) which is also the default argument. In
+this case, <code>run_model</code> must be specified as follows:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run_model</span>(<span class="at">data =</span> nma.baker2009,</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">measure =</span> <span class="st">&quot;OR&quot;</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">model =</span> <span class="st">&quot;RE&quot;</span>,</span>
@@ -207,17 +441,38 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_iter =</span> <span class="dv">10000</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_burnin =</span> <span class="dv">1000</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_thin =</span> <span class="dv">1</span>)</span></code></pre></div>
-<p>The argument <code>model = &quot;RE&quot;</code> refers to the random-effects model. For the fixed-effect model, use <code>model = &quot;FE&quot;</code>.</p>
-<p><code>heter_prior = list(&quot;lognormal&quot;, -2.06, 0.438)</code> refers to ‘symptoms reflecting the continuation of condition’ for the ‘pharmacological versus placebo’ comparison-type as elicited by Turner and colleagues (2015b).</p>
-<p>In the argument <code>mean_misspar = c(0, 0)</code>, the first and second element of the vector refers to the mean log IMOR in the non-reference interventions and the reference intervention of the network, respectively – the latter is always the intervention with identifier equal to 1. Hence, for all non-reference interventions we can consider <strong>the same</strong> mean log IMOR. See ‘Details’ in <code>?missingness_param_prior</code></p>
+<p>The argument <code>model = &quot;RE&quot;</code> refers to the random-effects
+model. For the fixed-effect model, use <code>model = &quot;FE&quot;</code>.</p>
+<p><code>heter_prior = list(&quot;lognormal&quot;, -2.06, 0.438)</code> refers to
+‘symptoms reflecting the continuation of condition’ for the
+‘pharmacological versus placebo’ comparison-type as elicited by Turner
+and colleagues (2015b).</p>
+<p>In the argument <code>mean_misspar = c(0, 0)</code>, the first and
+second element of the vector refers to the mean log IMOR in the
+non-reference interventions and the reference intervention of the
+network, respectively – the latter is always the intervention with
+identifier equal to 1. Hence, for all non-reference interventions we can
+consider <strong>the same</strong> mean log IMOR. See ‘Details’ in
+<code>?missingness_param_prior</code></p>
 </div>
 <div id="the-output" class="section level3">
 <h3>The output</h3>
-<p><code>run_model</code> returns <strong>a list of R2jags output</strong> on the summaries of the posterior distribution, and the Gelman-Rubin convergence diagnostic of the monitored parameters (see ‘Value’ in <code>?run_model</code>). The output is used as an S3 object by other functions of the package to be processed further and provide an end-user-ready output. See, for example, the function <code>?league_heatmap</code> that creates the league table with the effect sizes of all possible comparisons in the network.</p>
+<p><code>run_model</code> returns <strong>a list of R2jags
+output</strong> on the summaries of the posterior distribution, and the
+Gelman-Rubin convergence diagnostic of the monitored parameters (see
+‘Value’ in <code>?run_model</code>). The output is used as an S3 object
+by other functions of the package to be processed further and provide an
+end-user-ready output. See, for example, the function
+<code>?league_heatmap</code> that creates the league table with the
+effect sizes of all possible comparisons in the network.</p>
 </div>
 <div id="no-or-partially-extracted-missing-participant-outcome-data" class="section level3">
 <h3>No or partially extracted missing participant outcome data</h3>
-<p><code>run_model</code> can also handle a dataset where MOD have not be extracted or MOD have been extracted for some trials or trial-arms. For illustrative purposes, we removed the item <code>m</code> from <code>nma.baker2009</code> to indicate that MOD were not extracted for this outcome:</p>
+<p><code>run_model</code> can also handle a dataset where MOD have not
+be extracted or MOD have been extracted for some trials or trial-arms.
+For illustrative purposes, we removed the item <code>m</code> from
+<code>nma.baker2009</code> to indicate that MOD were not extracted for
+this outcome:</p>
 <pre><code>                  study t1 t2 t3 t4 r1 r2 r3 r4  n1  n2 n3 n4
 1 Llewellyn-Jones, 1996  1  4 NA NA  3  0 NA NA   8   8 NA NA
 2        Paggiaro, 1998  1  4 NA NA 51 45 NA NA 139 142 NA NA
@@ -225,17 +480,46 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 4        Casaburi, 2000  1  8 NA NA 41 45 NA NA 191 279 NA NA
 5       van Noord, 2000  1  7 NA NA 18 11 NA NA  50  47 NA NA
 6         Rennard, 2001  1  7 NA NA 41 38 NA NA 135 132 NA NA</code></pre>
-<p>Using the minimum required arguments, <code>run_model</code> will run and provide results.</p>
-<p><code>run_model</code> calls the <code>data_preparation</code> function. The latter creates a pseudo-data-frame for the item <code>m</code> (see ‘Value’ in <code>?data_preparation</code>) that assigns <code>NA</code> to all trial-arms. <code>data_preparation</code> also creates the pseudo-data-frame <code>I</code> that has the same dimension with the other items in the dataset, and assigns the zero value to all trial-arms to indicate that no MOD have been extracted. Both pseudo-data-frames aim to retain in the dataset the trials without information on MOD; otherwise, these trials would have been excluded from the analysis. See ‘Details’ in <code>?data_preparation</code> and <code>?run_model</code>.</p>
+<p>Using the minimum required arguments, <code>run_model</code> will run
+and provide results.</p>
+<p><code>run_model</code> calls the <code>data_preparation</code>
+function. The latter creates a pseudo-data-frame for the item
+<code>m</code> (see ‘Value’ in <code>?data_preparation</code>) that
+assigns <code>NA</code> to all trial-arms. <code>data_preparation</code>
+also creates the pseudo-data-frame <code>I</code> that has the same
+dimension with the other items in the dataset, and assigns the zero
+value to all trial-arms to indicate that no MOD have been extracted.
+Both pseudo-data-frames aim to retain in the dataset the trials without
+information on MOD; otherwise, these trials would have been excluded
+from the analysis. See ‘Details’ in <code>?data_preparation</code> and
+<code>?run_model</code>.</p>
 </div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
-<p>Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for decision making 2: a generalized linear modeling framework for pairwise and network meta-analysis of randomized controlled trials. <em>Med Decis Making</em> 2013;<strong>33</strong>(5):607–617. <a href="https://pubmed.ncbi.nlm.nih.gov/23104435/">doi: 10.1177/0272989X12458724</a></p>
-<p>White IR, Higgins JP, Wood AM. Allowing for uncertainty due to missing data in meta-analysis–part 1: two-stage methods. <em>Stat Med</em> 2008;<strong>27</strong>(5):711–27. <a href="https://pubmed.ncbi.nlm.nih.gov/17703496/">doi: 10.1002/sim.3008</a></p>
-<p>Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to account for uncertainty due to missing binary outcome data in pairwise meta-analysis. <em>Stat Med</em> 2015a;<strong>34</strong>(12):2062–80. <a href="https://pubmed.ncbi.nlm.nih.gov/25809313/">doi: 10.1002/sim.6475</a></p>
-<p>Spineli LM. An empirical comparison of Bayesian modelling strategies for missing binary outcome data in network meta- analysis. <em>BMC Med Res Methodol</em> 2019;<strong>19</strong>(1):86. <a href="https://pubmed.ncbi.nlm.nih.gov/31018836/">doi: 10.1186/s12874-019-0731-y</a></p>
-<p>Turner RM, Jackson D, Wei Y, Thompson SG, Higgins JPT. Predictive distributions for between-study heterogeneity and simple methods for their application in Bayesian meta-analysis. <em>Stat Med</em> 2015b;<strong>34</strong>(6):984–98. <a href="https://pubmed.ncbi.nlm.nih.gov/25475839/">doi: 10.1002/sim.6381</a></p>
+<p>Dias S, Sutton AJ, Ades AE, Welton NJ. Evidence synthesis for
+decision making 2: a generalized linear modeling framework for pairwise
+and network meta-analysis of randomized controlled trials. <em>Med Decis
+Making</em> 2013;<strong>33</strong>(5):607–617. <a href="https://pubmed.ncbi.nlm.nih.gov/23104435/">doi:
+10.1177/0272989X12458724</a></p>
+<p>White IR, Higgins JP, Wood AM. Allowing for uncertainty due to
+missing data in meta-analysis–part 1: two-stage methods. <em>Stat
+Med</em> 2008;<strong>27</strong>(5):711–27. <a href="https://pubmed.ncbi.nlm.nih.gov/17703496/">doi:
+10.1002/sim.3008</a></p>
+<p>Turner NL, Dias S, Ades AE, Welton NJ. A Bayesian framework to
+account for uncertainty due to missing binary outcome data in pairwise
+meta-analysis. <em>Stat Med</em> 2015a;<strong>34</strong>(12):2062–80.
+<a href="https://pubmed.ncbi.nlm.nih.gov/25809313/">doi:
+10.1002/sim.6475</a></p>
+<p>Spineli LM. An empirical comparison of Bayesian modelling strategies
+for missing binary outcome data in network meta- analysis. <em>BMC Med
+Res Methodol</em> 2019;<strong>19</strong>(1):86. <a href="https://pubmed.ncbi.nlm.nih.gov/31018836/">doi:
+10.1186/s12874-019-0731-y</a></p>
+<p>Turner RM, Jackson D, Wei Y, Thompson SG, Higgins JPT. Predictive
+distributions for between-study heterogeneity and simple methods for
+their application in Bayesian meta-analysis. <em>Stat Med</em>
+2015b;<strong>34</strong>(6):984–98. <a href="https://pubmed.ncbi.nlm.nih.gov/25475839/">doi:
+10.1002/sim.6381</a></p>
 </div>
 
 

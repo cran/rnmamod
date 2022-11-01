@@ -2,7 +2,6 @@
 #'   ggplot2
 #'   stats
 #'
-#' @importFrom coda as.mcmc
 #' @importFrom dplyr select starts_with ends_with %>%
 #' @importFrom fdrtool rhalfnorm
 #' @importFrom MASS fractions
@@ -11,15 +10,21 @@
 #' @importFrom ggpubr ggarrange
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom knitr kable
-#' @importFrom mcmcplots mcmcplot
-#' @importFrom netmeta pairwise netconnection
+#' @importFrom netmeta netconnection
 #' @importFrom pcnetmeta nma.networkplot
 #' @importFrom reshape2 melt
 #' @importFrom R2jags jags
 #' @importFrom scales rescale percent
 #' @importFrom writexl write_xlsx
-#' @importFrom utils combn
+#' @importFrom utils combn packageDescription
 
+.onAttach <- function (libname, pkgname) {
+  welcome <- paste0("Loading 'rnmamod', version",
+                    " ", packageDescription("rnmamod")$Version,
+                    ". Welcome to Network Meta-analysis with",
+                    " " , "Missing Participants! ^_^")
+  packageStartupMessage(welcome)
+}
 
 utils::globalVariables(c("active",
                          "analysis",
@@ -41,6 +46,7 @@ utils::globalVariables(c("active",
                          "m_prop",
                          "Order",
                          "outcome",
+                         "point",
                          "poor",
                          "risk",
                          "sd_value",
@@ -53,6 +59,7 @@ utils::globalVariables(c("active",
                          "treatment1",
                          "treat1",
                          "treat2",
+                         "type",
                          "upper",
                          "value",
                          "value2",
@@ -64,7 +71,7 @@ utils::globalVariables(c("active",
                          "x",
                          "y"))
 
-Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "false")
+#Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "false")
 Sys.setenv(JAGS_HOME = "C:/Program Files/JAGS/JAGS-4.2.0")
 Sys.setenv(JAGS_ROOT = "C:/Program Files/JAGS/JAGS-4.2.0")
 

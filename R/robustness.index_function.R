@@ -46,19 +46,20 @@
 #'   \item{threshold}{The threshold used to be inherited by the
 #'   \code{\link{heatmap_robustness}} function.}
 #'   \item{scenarios}{The scenarios considered to be inherited by the
-#'   \code{\link{heatmap_robustness}} and \code{\link{kld_barplot}} functions.}
+#'   \code{\link{kld_barplot}} function.}
 #'
 #' @details Thresholds of robustness have been proposed only for the odds ratio
-#'   and standardised mean difference effect measures (Spineli et al., 2021).
-#'   when the argument \code{threshold} has not been defined,
-#'   \code{robustness_index} considers the default values 0.28 and 0.17 as
-#'   threshold for robustness for binary and continuous outcome, respectively,
-#'   regardless of the effect measure.
+#'   and standardised mean difference (Spineli et al., 2021).
 #'   The user may consider the values 0.28 and 0.17 in the argument
 #'   \code{threshold} for the odds ratio and standardised mean difference effect
 #'   measures (the default values), respectively, or consider other plausible
-#'   values. Spineli et al. (2021) offers a discussion on specifying the
-#'   \code{threshold} of robustness.
+#'   values. When the argument \code{threshold} has not been defined,
+#'   \code{robustness_index} considers the default values 0.28 and 0.17 as
+#'   threshold for robustness for binary and continuous outcome, respectively,
+#'   regardless of the effect measure (the default thresholds may not be proper
+#'   choices for other effect measures; hence, use these threshold with great
+#'   caution in this case). Spineli et al. (2021) offers a discussion on
+#'   specifying the \code{threshold} of robustness.
 #'
 #'   In the case of binary outcome, \code{robustness_index} considers the
 #'   results in the odds ratio scale to calculate the robustness index.

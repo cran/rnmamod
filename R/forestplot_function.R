@@ -2,7 +2,8 @@
 #'
 #' @description Provides a forest plot with the posterior mean and 95\% credible
 #'   and prediction intervals for comparisons with the selected intervention
-#'   (comparator) in the network.
+#'   (comparator) in the network, and a forest plot with the corresponding
+#'   SUCRA values.
 #'
 #' @param full An object of S3 class \code{\link{run_model}}. See 'Value' in
 #'   \code{\link{run_model}}.
@@ -17,7 +18,7 @@
 #'   the network, and (2) a forest plot on the posterior mean and 95\% credible
 #'   interval of SUCRA values of the interventions (Salanti et al., 2011).
 #'
-#' @details The y-axis of the forest plot on the effect sizes displays the
+#' @details The y-axis of the forest plot on \bold{effect sizes} displays the
 #'   labels of the interventions in the network; the selected intervention that
 #'   comprises the \code{compar} argument is annotated in the plot with the
 #'   label 'Comparator intervention'.
@@ -29,7 +30,7 @@
 #'   means are reported in the original scale after exponentiation of the
 #'   logarithmic scale.
 #'
-#'   The y-axis for the forest plot on the SUCRA values displays the
+#'   The y-axis for the forest plot on \bold{SUCRA} values displays the
 #'   labels of the interventions in the network.
 #'   The corresponding numerical results are displayed above each line.
 #'   Three coloured rectangles appear in the forest plot: a red rectangle for
@@ -114,10 +115,10 @@ forestplot <- function(full, compar, drug_names) {
   measure <- full$measure
   model <- full$model
   sucra <- full$SUCRA
-  em_ref00 <- cbind(rbind(data.frame(mean = full$EM[, 1],
+  em_ref00 <- cbind(rbind(data.frame(mean = full$EM[, 5], #1
                                      lower = full$EM[, 3],
                                      upper = full$EM[, 7]),
-                          data.frame(mean = full$EM[, 1] * (-1),
+                          data.frame(mean = full$EM[, 5] * (-1), #1
                                      lower = full$EM[, 7] * (-1),
                                      upper = full$EM[, 3] * (-1))),
                     poss_pair_comp)
@@ -133,10 +134,10 @@ forestplot <- function(full, compar, drug_names) {
   # Posterior results on the predicted estimates of comparisons with the
   # selected comparator as reference
   if (model == "RE") {
-    pred_ref00 <- cbind(rbind(data.frame(mean = full$EM_pred[, 1],
+    pred_ref00 <- cbind(rbind(data.frame(mean = full$EM_pred[, 5], #1
                                          lower = full$EM_pred[, 3],
                                          upper = full$EM_pred[, 7]),
-                              data.frame(mean = full$EM_pred[, 1] * (-1),
+                              data.frame(mean = full$EM_pred[, 5] * (-1), #1
                                          lower = full$EM_pred[, 7] * (-1),
                                          upper = full$EM_pred[, 3] * (-1))),
                         poss_pair_comp)
@@ -364,12 +365,12 @@ forestplot <- function(full, compar, drug_names) {
                  size = 4) +
       scale_y_continuous(trans = ifelse(!is.element(
         measure, c("OR", "RR", "ROM")), "identity", "log10")) +
-      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.5,
-                    fill = "lowest"),
-                alpha = 0.02) +
-      geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 0.8,
-                    fill = "intermediate"),
-                alpha = 0.02) +
+      #geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0, ymax = 0.5,
+      #              fill = "lowest"),
+      #          alpha = 0.02) +
+      #geom_rect(aes(xmin = 0, xmax = Inf, ymin = 0.5, ymax = 0.8,
+      #              fill = "intermediate"),
+      #          alpha = 0.02) +
       scale_fill_manual(name = " ",
                         values = c("lowest" = "white",
                                    "intermediate" = "white",

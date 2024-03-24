@@ -20,10 +20,10 @@
 #' @param name2 The text for the title of the results that refer to
 #'   the outcome under \code{full2}.
 #'
-#' @return A panel of rankograms (red bars) with integrated blue SUCRA curves
-#'   for each intervention in the network (Salanti et al., 2011). The x-axis of
-#'   each panel refers to the ranking, and the y-axis refers to the ranking
-#'   probability expressed in percentage.
+#' @return A panel of rankograms (yellowish bars) with integrated reddish SUCRA
+#'   curves for each intervention in the network (Salanti et al., 2011). The
+#'   x-axis of each panel refers to the ranking, and the y-axis refers to the
+#'   ranking probability expressed in percentage.
 #'
 #' @details Interventions are sorted in the descending order of their SUCRA
 #'   value. The SUCRA value expressed in percentage appears on the top left
@@ -39,8 +39,7 @@
 #'   Otherwise, the execution of the function will be stopped and an error
 #'   message will be printed on the R console.
 #'
-#' @author {Loukia M. Spineli}, {Chrysostomos Kalyvas},
-#'   {Katerina Papadimitropoulou}
+#' @author Loukia M. Spineli, Chrysostomos Kalyvas, Katerina Papadimitropoulou
 #'
 #' @seealso \code{\link{run_model}}
 #'
@@ -74,12 +73,12 @@ rankosucra_plot <- function(full1,
                             name1 = NULL,
                             name2 = NULL) {
 
-  if (full1$type != "nma" || is.null(full1$type)) {
+  if (!inherits(full1, "run_model") || is.null(full1)) {
     stop("'full1' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
 
-  if (!is.null(full2) & (full2$type != "nma" || is.null(full2$type))) {
+  if (!is.null(full2) & (!inherits(full2, "run_model") || is.null(full2))) {
     stop("'full2' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
@@ -195,8 +194,8 @@ rankosucra_plot <- function(full1,
   # Bars for the ranking probabilities and line for the SUCRA
   p <- if (is.null(full2)) {
     ggplot(rank_data, aes(x = as.factor(order), y = value_rank)) +
-      geom_bar(stat = "identity", color = "#D55E00", fill = "#D55E00") +
-      geom_line(aes(x = order, y = value_cum), size = 1, color = "blue") +
+      geom_bar(stat = "identity", color = "#B99B6B", fill = "#B99B6B") +
+      geom_line(aes(x = order, y = value_cum), size = 1, color = "#AA5656") +
       facet_wrap(vars(factor(intervention,
                              levels = drug_names_order[
                                seq_len(length(drug_names_order))]))) +

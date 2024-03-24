@@ -1,7 +1,7 @@
 params <-
 list(EVAL = FALSE)
 
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -10,9 +10,9 @@ knitr::opts_chunk$set(
 ## ----setup, include = FALSE---------------------------------------------------
 library(rnmamod)
 
-## ---- echo = FALSE, results = "hide", fig.width = 5, fig.height = 5, fig.align = "center"----
+## ----echo = FALSE, results = "hide", fig.width = 5, fig.height = 5, fig.align = "center"----
 netplot(data = nma.baker2009, drug_names = c("placebo", "budesonide", "budesonide plus \n formoterol", "fluticasone", "fluticasone plus \n salmeterol", "formoterol", "salmeterol", "tiotropium"),
-        adjust.figsizex = 1.35, adjust.figsizey = 1.15)
+        show_multi = TRUE, edge_label_cex = 1)
 
 ## ----eval = FALSE-------------------------------------------------------------
 #  run_model(data = nma.baker2009,

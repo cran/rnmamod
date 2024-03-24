@@ -31,7 +31,7 @@
 #'   file at the working  directory of the user.
 #'
 #'   \code{series_meta_plot} returns a panel of two forest plots: (1) a
-#'   forest plot on the posterior mean and 95\% credible interval of the summary
+#'   forest plot on the posterior median and 95\% credible interval of the summary
 #'   effect size for the observed comparisons from network meta-analysis and the
 #'   corresponding pairwise meta-analyses, and (2) a forest plot on the
 #'   posterior median and 95\% credible interval of the between-trial standard
@@ -93,12 +93,12 @@
 #' @export
 series_meta_plot <- function(full, meta, drug_names, save_xls) {
 
-  if (full$type != "nma" || is.null(full$type)) {
+  if (!inherits(full, "run_model") || is.null(full)) {
     stop("'full' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
 
-  if (meta$type != "series" || is.null(meta$type)) {
+  if (!inherits(meta, "run_series_meta") || is.null(meta)) {
     stop("'meta' must be an object of S3 class 'run_series_meta'.",
          call. = FALSE)
   }
@@ -164,7 +164,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
 
   # Keep the same comparisons with those in PMA (they have at least two trials)
   em_full <- em_full0[is.element(possible_comp$poss_comp[, 4], obs_comp),
-                      c(1:3, 7)]
+                      c(5, 2:3, 7)]
   em_full[, c(1, 3:4)] <- if (is.element(measure, c("OR", "ROM"))) {
     exp(em_full[, c(1, 3:4)])
   } else if (is.element(measure, c("MD", "SMD"))) {
@@ -181,7 +181,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
   tau_meta <- tau_meta1[order(tau_meta1$t1),]  # Then, sort by t1
 
   # Effect estimate of separate MAs
-  em_meta <- round(em_meta0[, c(3:5, 9)], 2)
+  em_meta <- round(em_meta0[, c(7, 4:5, 9)], 2)
   em_meta[, c(1, 3:4)] <- if (is.element(measure, c("OR", "ROM"))) {
     exp(em_meta[, c(1, 3:4)])
   } else if (is.element(measure, c("MD", "SMD"))) {
@@ -235,8 +235,8 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                           tau_meta_clean[, 1:2],
                           cri_tau_meta)
     colnames(em_both) <- c("Comparison",
-                           "Mean NMA", "SD NMA", "95% CrI NMA",
-                           "Mean MA", "SD MA", "95% CrI MA",
+                           "Median NMA", "SD NMA", "95% CrI NMA",
+                           "Median MA", "SD MA", "95% CrI MA",
                            "Median tau", "SD tau", "95% CrI tau")
   } else {
     em_both <- data.frame(possible_comp$obs_comp[, 4],
@@ -245,8 +245,8 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                           em_meta_clean[, 1:2],
                           cri_meta_clean)
     colnames(em_both) <- c("Comparison",
-                           "Mean NMA", "SD NMA", "95% CrI NMA",
-                           "Mean MA", "SD MA", "95% CrI MA")
+                           "Median NMA", "SD NMA", "95% CrI NMA",
+                           "Median MA", "SD MA", "95% CrI MA")
   }
   rownames(em_both) <- NULL
 
@@ -260,7 +260,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                               "Pairwise meta-analysis"),
                             each = length(obs_comp)))
   colnames(prepare) <- c("order",
-                         "comparison", "mean", "lower", "upper",
+                         "comparison", "median", "lower", "upper",
                          "analysis")
   rownames(prepare) <- NULL
 
@@ -294,7 +294,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
 
   p1 <- ggplot(data = prepare,
                aes(x = as.factor(order),
-                   y = mean,
+                   y = median,
                    ymin = lower,
                    ymax = upper,
                    colour = analysis,
@@ -311,8 +311,8 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                      stroke = 0.3,
                      position = position_dodge(width = 0.5)) +
           geom_text(aes(x = as.factor(order),
-                        y = mean,
-                        label = paste0(sprintf("%.2f", mean), " ", "(",
+                        y = median,
+                        label = paste0(sprintf("%.2f", median), " ", "(",
                                        sprintf("%.2f", lower), ",", " ",
                                        sprintf("%.2f", upper), ")"),
                         hjust = 0,
@@ -383,7 +383,7 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                  stroke = 0.3,
                  position = position_dodge(width = 0.5)) +
       geom_text(aes(x = as.factor(seq_len(length(obs_comp))),
-                    y = round(as.numeric(median), 2),
+                    y = as.numeric(median), # round(as.numeric(median), 2),
                     label = paste0(round(as.numeric(median), 2), " ", "(",
                                    round(as.numeric(lower), 2), ",", " ",
                                    round(as.numeric(upper), 2), ")")),
@@ -402,7 +402,9 @@ series_meta_plot <- function(full, meta, drug_names, save_xls) {
                         values = c("low" = "#009E73",
                                    "reasonable" = "orange",
                                    "fairly high" = "#D55E00",
-                                   "fairly extreme" = "red")) +
+                                   "fairly extreme" = "red"),
+                        limits = c("low", "reasonable", "fairly high",
+                                   "fairly extreme")) +
       labs(x = "", y = "Between-trial standard deviation", caption = " ") +
       coord_flip() +
       theme_classic() +

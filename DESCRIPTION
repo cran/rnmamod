@@ -1,8 +1,8 @@
 Type: Package
 Package: rnmamod
 Title: Bayesian Network Meta-Analysis with Missing Participants
-Version: 0.3.0
-Date: 2022-11-01
+Version: 0.4.0
+Date: 2024-03-24
 Authors@R: c(
     person("Loukia", "Spineli", email = "Spineli.Loukia@mh-hannover.de", 
     role = c("aut", "cre")),
@@ -18,33 +18,38 @@ Description: A comprehensive suite of functions to perform and visualise
     meta-regression, evaluation of the consistency assumption via the 
     node-splitting approach and the unrelated mean effects model, and 
     sensitivity analysis. Missing participant outcome data are addressed in all 
-    models of the package. The package also offers a rich, user-friendly 
-    visualisation toolkit that aids in appraising and interpreting the results 
-    thoroughly and preparing the manuscript for journal submission. 
-    The visualisation tools comprise the network plot, forest plots, panel of 
-    diagnostic plots, heatmaps on the extent of missing participant outcome data
-    in the network, league heatmaps on estimation and prediction, rankograms, 
-    Bland-Altman plot, leverage plot, deviance scatterplot, heatmap of 
-    robustness, and barplot of Kullback-Leibler divergence. The package also 
+    models of the package. The robustness to primary analysis results can 
+    also be investigated using a novel intuitive index. Methods to evaluate the 
+    transitivity assumption quantitatively are provided. The package also offers 
+    a rich, user-friendly visualisation toolkit that aids in appraising and 
+    interpreting the results thoroughly and preparing the manuscript for journal 
+    submission. The visualisation tools comprise the network plot, forest plots, 
+    panel of diagnostic plots, heatmaps on the extent of missing participant 
+    outcome data in the network, league heatmaps on estimation and prediction, 
+    rankograms, Bland-Altman plot, leverage plot, deviance scatterplot, heatmap 
+    of robustness, barplot of Kullback-Leibler divergence, heatmap of comparison
+    dissimilarities and dendrogram of comparison clustering. The package also 
     allows the user to export the results to an Excel file at the working 
     directory.
 License: GPL (>= 3)
-URL: https://CRAN.R-project.org/package=rnmamod
+URL: https://CRAN.R-project.org/package=rnmamod,
+        https://github.com/LoukiaSpin/rnmamod
+BugReports: https://github.com/LoukiaSpin/rnmamod/issues
 Depends: R (>= 4.0.0)
-Imports: dplyr, fdrtool, gemtc, ggfittext, ggplot2, ggpubr, ggrepel,
-        knitr, MASS, mcmcplots, netmeta, pcnetmeta, R2jags, reshape2,
-        scales, writexl
+Imports: cluster, dendextend, fdrtool, gemtc, ggfittext, ggplot2,
+        ggpubr, ggrepel, heatmaply, igraph, knitr, MASS, mcmcplots,
+        R2jags, reshape2, scales, stringr, writexl
 Suggests: rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2022-11-01 10:22:23 UTC; Loukia
+Packaged: 2024-03-24 14:07:44 UTC; Loukia
 Author: Loukia Spineli [aut, cre],
   Chrysostomos Kalyvas [ctb],
   Katerina Papadimitropoulou [ctb]
 Repository: CRAN
-Date/Publication: 2022-11-01 10:44:53 UTC
+Date/Publication: 2024-03-24 21:40:02 UTC

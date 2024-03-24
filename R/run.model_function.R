@@ -77,6 +77,10 @@
 #'   MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
+#' @param inits A list with the initial values for the parameters; an argument
+#'   of the \code{\link[R2jags:jags]{jags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   The default argument is \code{NULL}, and JAGS generates the initial values.
 #'
 #' @format The columns of the data-frame in the argument \code{data} refer
 #'   to the following elements for a continuous outcome:
@@ -212,6 +216,12 @@
 #'   control arm in each trial. This case is relevant in non-star-shaped
 #'   networks.
 #'
+#'   The model is updated until convergence using the
+#'   \code{\link[R2jags:autojags]{autojags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+#'   number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+#'   respectively.
+#'
 #'   To perform a Bayesian pairwise or network meta-analysis, the
 #'   \code{\link{prepare_model}} function is called which contains the WinBUGS
 #'   code as written by Dias et al. (2013a) for binomial and normal likelihood to
@@ -302,8 +312,10 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{baseline_model}}, \code{\link{data_preparation}},
-#'   \code{\link{heterogeneity_param_prior}}, \code{\link[R2jags:jags]{jags}},
+#' @seealso \code{\link[R2jags:autojags]{autojags}},
+#'   \code{\link{baseline_model}}, \code{\link{data_preparation}},
+#'   \code{\link{heterogeneity_param_prior}},
+#'   \code{\link[R2jags:jags]{jags}},
 #'   \code{\link{missingness_param_prior}}, \code{\link{prepare_model}}
 #'
 #' @references
@@ -406,7 +418,8 @@ run_model <- function(data,
                       n_chains,
                       n_iter,
                       n_burnin,
-                      n_thin) {
+                      n_thin,
+                      inits = NULL) {
 
 
   # Prepare the dataset for the R2jags
@@ -480,9 +493,12 @@ run_model <- function(data,
   ref_base <- if (is.element(measure, c("OR", "RR", "RD")) &
                   missing(base_risk)) {
     base_risk <-
-      describe_network(data = data,
-                       drug_names = 1:item$nt,
-                       measure = measure)$table_interventions[ref, 7]/100
+      aggregate(na.omit(unlist(item$r)) /
+                  (na.omit(unlist(item$N)) - na.omit(unlist(item$m))),
+                list(na.omit(unlist(item$t))), median)[ref, 2]
+      #describe_network(data = data,
+      #                 drug_names = 1:item$nt,
+      #                 measure = measure)$table_interventions[ref, 7]/100
     rep(log(base_risk / (1 - base_risk)), 2)
   } else if (is.element(measure, c("OR", "RR", "RD"))) {
     baseline_model(base_risk,
@@ -520,6 +536,12 @@ run_model <- function(data,
     stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
   } else {
     n_thin
+  }
+  inits <- if (is.null(inits)) {
+    message("JAGS generates initial values for the parameters.")
+   inits <- NULL
+  } else {
+    inits
   }
 
   # Sign of basic parameters in relation to 'ref'
@@ -610,77 +632,104 @@ run_model <- function(data,
   }
 
   # Run the Bayesian analysis
-  jagsfit <- jags(data = data_jag,
-                  parameters.to.save = param_jags,
-                  model.file = textConnection(
-                    prepare_model(measure,
-                                  model,
-                                  covar_assumption = "NO",
-                                  assumption)
-                    ),
-                  n.chains = n_chains,
-                  n.iter = n_iter,
-                  n.burnin = n_burnin,
-                  n.thin = n_thin)
+  message("Running the model ...")
+  jagsfit0 <- jags(data = data_jag,
+                   inits = inits,
+                   parameters.to.save = param_jags,
+                   model.file = textConnection(
+                     prepare_model(measure,
+                                   model,
+                                   covar_assumption = "NO",
+                                   assumption)
+                     ),
+                   n.chains = n_chains,
+                   n.iter = n_iter,
+                   n.burnin = n_burnin,
+                   n.thin = n_thin)
+
+  # Update until convergence is necessary
+  message("... Updating the model until convergence")
+  jagsfit <- autojags(jagsfit0, n.iter = n_iter, n.thin = n_thin, n.update = 2)
 
   # Turn R2jags object into a data-frame
   get_results <- as.data.frame(t(jagsfit$BUGSoutput$summary))
 
   # Effect size of all unique pairwise comparisons
-  EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  #EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  EM <- t(get_results)[startsWith(rownames(t(get_results)), "EM["), ]
 
   # Predictive effects of all unique pairwise comparisons
-  EM_pred <- t(get_results %>% dplyr::select(starts_with("EM.pred[")))
+  #EM_pred <- t(get_results %>% dplyr::select(starts_with("EM.pred[")))
+  EM_pred <- t(get_results)[startsWith(rownames(t(get_results)), "EM.pred["), ]
 
   # Unique absolute risks for all interventions (only binary data)
-  abs_risk <- t(get_results %>% dplyr::select(starts_with("abs_risk[")))
+  #abs_risk <- t(get_results %>% dplyr::select(starts_with("abs_risk[")))
+  abs_risk <- t(get_results)[startsWith(rownames(t(get_results)), "abs_risk["),]
 
   # Estimated og odds ratio of all unique pairwise comparisons
   # (when RR and RD have been selected as effect measures)
-  EM_LOR <- t(get_results %>% dplyr::select(starts_with("EM.LOR[")))
+  #EM_LOR <- t(get_results %>% dplyr::select(starts_with("EM.LOR[")))
+  EM_LOR <- t(get_results)[startsWith(rownames(t(get_results)), "EM.LOR["), ]
 
   # Predicted log odds ratio of all unique pairwise comparisons
   # (when RR and RD have been selected as effect measures)
-  EM_pred_LOR <- t(get_results %>% dplyr::select(starts_with("EM.pred.LOR[")))
+  #EM_pred_LOR <- t(get_results %>% dplyr::select(starts_with("EM.pred.LOR[")))
+  EM_pred_LOR <-
+    t(get_results)[startsWith(rownames(t(get_results)), "EM.pred.LOR["), ]
 
   # Between-trial standard deviation
-  tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  #tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  tau <- t(get_results)[startsWith(rownames(t(get_results)), "tau"), ]
 
   # SUrface under the Cumulative RAnking curve values
-  SUCRA <- t(get_results %>% dplyr::select(starts_with("SUCRA[")))
+  #SUCRA <- t(get_results %>% dplyr::select(starts_with("SUCRA[")))
+  SUCRA <- t(get_results)[startsWith(rownames(t(get_results)), "SUCRA["), ]
 
   # SUrface under the Cumulative RAnking curve values
   # (when RR and RD have been selected as effect measures)
-  SUCRA_LOR <- t(get_results %>% dplyr::select(starts_with("SUCRA.LOR[")))
+  #SUCRA_LOR <- t(get_results %>% dplyr::select(starts_with("SUCRA.LOR[")))
+  SUCRA_LOR <-
+    t(get_results)[startsWith(rownames(t(get_results)), "SUCRA.LOR["), ]
 
   # Within-trial effects size
-  delta <- t(get_results %>% dplyr::select(starts_with("delta") &
-                                             !ends_with(",1]")))
+  #delta <- t(get_results %>% dplyr::select(starts_with("delta") &
+  #                                           !ends_with(",1]")))
+  delta <- t(get_results)[startsWith(rownames(t(get_results)), "delta") &
+                            !endsWith(rownames(t(get_results)), ",1]"), ]
 
   # Ranking probability of each intervention for every rank
-  effectiveness <- t(get_results %>% dplyr::select(
-    starts_with("effectiveness")))
+  #effectiveness <- t(get_results %>% dplyr::select(
+  #  starts_with("effectiveness")))
+  effectiveness <-
+    t(get_results)[startsWith(rownames(t(get_results)), "effectiveness"), ]
 
   # Estimated missingness parameter
   phi <- if (min(na.omit(unlist(item$I))) == 1 &
              max(na.omit(unlist(item$I))) == 1) {
-    t(get_results %>% dplyr::select(starts_with("phi") |
-                                      starts_with("mean.phi") |
-                                      starts_with("mean.phi[") |
-                                      starts_with("phi[")))
+    #t(get_results %>% dplyr::select(starts_with("phi") |
+    #                                  starts_with("mean.phi") |
+    #                                  starts_with("mean.phi[") |
+    #                                  starts_with("phi[")))
+    t(get_results)[startsWith(rownames(t(get_results)), "phi") |
+                     startsWith(rownames(t(get_results)), "mean.phi") |
+                     startsWith(rownames(t(get_results)), "mean.phi[") |
+                     startsWith(rownames(t(get_results)), "phi["), ]
   } else if (min(na.omit(unlist(item$I))) == 0 &
              max(na.omit(unlist(item$I))) == 1) {
-    t(get_results %>% dplyr::select(starts_with("phi[")))
+    t(get_results)[startsWith(rownames(t(get_results)), "phi["), ]
+    #t(get_results %>% dplyr::select(starts_with("phi[")))
   } else if (min(na.omit(unlist(item$I))) == 0 &
              max(na.omit(unlist(item$I))) == 0) {
     NULL
   }
 
   # Trial-arm deviance contribution for observed outcome
-  dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o")))
+  #dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o")))
+  dev_o <- t(get_results)[startsWith(rownames(t(get_results)), "dev.o"), ]
 
   # Fitted/predicted outcome
-  hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  #hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  hat_par <- t(get_results)[startsWith(rownames(t(get_results)), "hat.par"), ]
 
   # Total residual deviance
   dev <- jagsfit$BUGSoutput$summary["totresdev.o", "mean"]
@@ -768,8 +817,7 @@ run_model <- function(data,
                   n_chains = n_chains,
                   n_iter = n_iter,
                   n_burnin = n_burnin,
-                  n_thin = n_thin,
-                  type = "nma")
+                  n_thin = n_thin)
   if (model == "RE" & !is.element(measure, c("OR", "RR", "RD"))) {
     ma_results <- append(results, list(EM_pred = EM_pred,
                                        tau = tau,
@@ -838,6 +886,8 @@ run_model <- function(data,
                                         abs_risk = abs_risk,
                                         base_risk = base_risk))
   }
+
+  class(ma_results) <- class(nma_results) <- "run_model"
 
   ifelse(item$nt > 2, return(nma_results), return(ma_results))
 }

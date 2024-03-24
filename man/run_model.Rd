@@ -59,7 +59,8 @@ run_model(
   n_chains,
   n_iter,
   n_burnin,
-  n_thin
+  n_thin,
+  inits = NULL
 )
 }
 \arguments{
@@ -148,6 +149,11 @@ The default argument is 1000.}
 MCMC sampling; an argument of the \code{\link[R2jags:jags]{jags}} function
 of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1.}
+
+\item{inits}{A list with the initial values for the parameters; an argument
+of the \code{\link[R2jags:jags]{jags}} function of the R-package
+\href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+The default argument is \code{NULL}, and JAGS generates the initial values.}
 }
 \value{
 A list of R2jags output on the summaries of the posterior
@@ -249,6 +255,12 @@ The model runs in \code{JAGS} and the progress of the simulation
   interventions with a lower identifier are consistently treated as the
   control arm in each trial. This case is relevant in non-star-shaped
   networks.
+
+  The model is updated until convergence using the
+  \code{\link[R2jags:autojags]{autojags}} function of the R-package
+  \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+  number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+  respectively.
 
   To perform a Bayesian pairwise or network meta-analysis, the
   \code{\link{prepare_model}} function is called which contains the WinBUGS
@@ -426,8 +438,10 @@ in meta-analysis--part 1: two-stage methods. \emph{Stat Med}
 2008;\bold{27}(5):711--27. doi: 10.1002/sim.3008
 }
 \seealso{
-\code{\link{baseline_model}}, \code{\link{data_preparation}},
-  \code{\link{heterogeneity_param_prior}}, \code{\link[R2jags:jags]{jags}},
+\code{\link[R2jags:autojags]{autojags}},
+  \code{\link{baseline_model}}, \code{\link{data_preparation}},
+  \code{\link{heterogeneity_param_prior}},
+  \code{\link[R2jags:jags]{jags}},
   \code{\link{missingness_param_prior}}, \code{\link{prepare_model}}
 }
 \author{

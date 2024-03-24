@@ -4,7 +4,7 @@
 \alias{run_series_meta}
 \title{Perform a series of Bayesian pairwise meta-analyses}
 \usage{
-run_series_meta(full, n_chains, n_iter, n_burnin, n_thin)
+run_series_meta(full, n_chains, n_iter, n_burnin, n_thin, inits = NULL)
 }
 \arguments{
 \item{full}{An object of S3 class \code{\link{run_model}}. See 'Value' in
@@ -30,6 +30,11 @@ The default argument is 1000.}
 sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
 the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 The default argument is 1.}
+
+\item{inits}{A list with the initial values for the parameters; an argument
+of the \code{\link[R2jags:jags]{jags}} function of the R-package
+\href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+The default argument is \code{NULL}, and JAGS generates the initial values.}
 }
 \value{
 An R2jags output on the summaries of the posterior distribution, and
@@ -69,6 +74,11 @@ Performs a Bayesian pairwise meta-analysis for each pairwise
   The number of times the function is used is also printed on the console
   (in red) and is equal to the number of  observed pairwise comparisons
   in the network (see 'Examples').
+  The model is updated until convergence using the
+  \code{\link[R2jags:autojags]{autojags}} function of the R-package
+  \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+  number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+  respectively.
 
   The output of \code{run_series_meta} is not end-user-ready. The
   \code{\link{series_meta_plot}} function inherits the output of

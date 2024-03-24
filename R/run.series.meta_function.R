@@ -22,6 +22,10 @@
 #'   sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
 #'   the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
+#' @param inits A list with the initial values for the parameters; an argument
+#'   of the \code{\link[R2jags:jags]{jags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   The default argument is \code{NULL}, and JAGS generates the initial values.
 #'
 #' @return An R2jags output on the summaries of the posterior distribution, and
 #'   the Gelman-Rubin convergence diagnostic (Gelman et al., 1992) of the
@@ -55,6 +59,11 @@
 #'   The number of times the function is used is also printed on the console
 #'   (in red) and is equal to the number of  observed pairwise comparisons
 #'   in the network (see 'Examples').
+#'   The model is updated until convergence using the
+#'   \code{\link[R2jags:autojags]{autojags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+#'   number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+#'   respectively.
 #'
 #'   The output of \code{run_series_meta} is not end-user-ready. The
 #'   \code{\link{series_meta_plot}} function inherits the output of
@@ -95,10 +104,15 @@
 #' }
 #'
 #' @export
-run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
+run_series_meta <- function(full,
+                            n_chains,
+                            n_iter,
+                            n_burnin,
+                            n_thin,
+                            inits = NULL) {
 
 
-  if (full$type != "nma" || is.null(full$type)) {
+  if (!inherits(full, "run_model") || is.null(full)) {
     stop("'full' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
@@ -162,6 +176,12 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
   } else {
     n_thin
   }
+  inits <- if (is.null(inits)) {
+    message("JAGS generates initial values for the parameters.")
+    NULL
+  } else {
+    inits
+  }
 
   # Prepare the dataset for the R2jags
   item <- data_preparation(data, measure)
@@ -204,31 +224,6 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
                                  "m2",
                                  "n1",
                                  "n2")
-    #pairwise_observed <-
-    #  pairwise(as.list(item$t),
-    #           mean = as.list(item$y0),
-    #           sd = as.list(item$sd0),
-    #           n = as.list(item$N),
-    #           data = cbind(item$t, item$y0, item$sd0, item$N),
-    #           studlab = 1:item$ns)[, c(3:5, 7, 10, 8, 11, 6, 9)]
-    #colnames(pairwise_observed) <- c("study",
-    #                                  "arm1",
-    #                                  "arm2",
-    #                                  "y1",
-    #                                  "y2",
-    #                                  "sd1",
-    #                                  "sd2",
-    #                                  "n1",
-    #                                  "n2")
-
-    # Maintain MOD and merge with 'pairwise_observed'
-    #pairwise_mod <- pairwise(as.list(item$t),
-    #                          mean = as.list(item$y0),
-    #                          sd = as.list(item$sd0),
-    #                          n = as.list(item$m),
-    #                          data = cbind(item$t, item$y0, item$sd0, item$m),
-    #                          studlab = 1:item$ns)[, c(6, 9)]
-    #colnames(pairwise_mod) <- c("m1", "m2")
 
   } else {
     # Turn into contrast-level data
@@ -248,27 +243,6 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
                                  "m2",
                                  "n1",
                                  "n2")
-    #pairwise_observed <-
-    #  pairwise(as.list(item$t),
-    #           event = as.list(item$r),
-    #           n = as.list(item$N),
-    #           data = cbind(item$t, item$r, item$N),
-    #           studlab = 1:item$ns)[, c(3:6, 8, 7, 9)]
-    #colnames(pairwise_observed) <- c("study",
-    #                                  "arm1",
-    #                                  "arm2",
-    #                                  "r1",
-    #                                  "r2",
-    #                                  "n1",
-    #                                  "n2")
-
-    # Maintain MOD and merge with 'pairwise_observed'
-    #pairwise_mod <- pairwise(as.list(item$t),
-    #                         event = as.list(item$m),
-    #                         n = as.list(item$N),
-    #                         data = cbind(item$t, item$m, item$N),
-    #                         studlab = 1:item$ns)[, c(6, 8)]
-    #colnames(pairwise_mod) <- c("m1", "m2")
   }
 
   # The dataset for the analysis
@@ -278,38 +252,23 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
   # Experimental arm
   pairwise_data$t2 <- rep(2, dim(pairwise_data)[1])
 
-  # A function to extract numbers from a character.
-  # Source: http://stla.github.io/stlapblog/posts/numextract.html
-  #numextract <- function(string) {
-  #  unlist(regmatches(string, gregexpr("[[:digit:]]+\\.*[[:digit:]]*", string)))
-  #}
-
   # Observed comparisons in the network
   comp <- as.data.frame(
     table(paste0(pairwise_data$arm1, "vs", pairwise_data$arm2)))
   colnames(comp) <- c("comparison", "frequency")
 
   # Indicate all observed comparisons
-  #obs_comp <- matrix(as.numeric(numextract(comp[, 1])),
-  #                   nrow = dim(comp)[1],
-  #                   ncol = 2,
-  #                   byrow = TRUE)
   obs_comp <- unique(pairwise_data[, 1:2])
   n_obs_comp <- dim(obs_comp)[1]
 
   # Indicate comparisons with one trial
-  #keep_comp0 <- subset(comp, frequency > 1)
-  #keep_comp <- matrix(as.numeric(numextract(keep_comp0[, 1])),
-  #                    nrow = dim(keep_comp0)[1],
-  #                    ncol = 2,
-  #                    byrow = TRUE)
-  #n_comp <- dim(keep_comp)[1]
   single <- ifelse (comp[, 2] < 2, 1, 0) # 1:yes, 0:no
 
   # Run each random-effects pairwise meta-analysis
   meta <- list()
   for (i in 1:n_obs_comp) {
-    message(paste(i, "out of", n_obs_comp, "observed comparisons"))
+    a <- "(and model updating until convergence)"
+    message(paste(i, "out of", n_obs_comp, "observed comparisons", a))
 
     # 'D' and 'base_risk' do not matter in pairwise meta-analysis
     meta[[i]] <-
@@ -328,7 +287,8 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
                   n_chains,
                   n_iter,
                   n_burnin,
-                  n_thin)
+                  n_thin,
+                  inits = inits)
         })
   }
 
@@ -352,26 +312,28 @@ run_series_meta <- function(full, n_chains, n_iter, n_burnin, n_thin) {
   }
 
   # Return results based on the model
-  return_results <- if (model == "RE") {
+  results <- if (model == "RE") {
     list(EM = EM,
          tau = tau,
+         measure = measure,
+         model = model,
          single = single,
          n_chains = n_chains,
          n_iter = n_iter,
          n_burnin = n_burnin,
-         n_thin = n_thin,
-         measure = measure,
-         type = "series")
+         n_thin = n_thin)
   } else {
     list(EM = EM,
+         measure = measure,
+         model = model,
          single = single,
          n_chains = n_chains,
          n_iter = n_iter,
          n_burnin = n_burnin,
-         n_thin = n_thin,
-         measure = measure,
-         type = "series")
+         n_thin = n_thin)
   }
 
-  return(return_results)
+  class(results) <- "run_series_meta"
+
+  return(results)
 }

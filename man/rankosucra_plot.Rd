@@ -36,10 +36,10 @@ the outcome under \code{full1}.}
 the outcome under \code{full2}.}
 }
 \value{
-A panel of rankograms (red bars) with integrated blue SUCRA curves
-  for each intervention in the network (Salanti et al., 2011). The x-axis of
-  each panel refers to the ranking, and the y-axis refers to the ranking
-  probability expressed in percentage.
+A panel of rankograms (yellowish bars) with integrated reddish SUCRA
+  curves for each intervention in the network (Salanti et al., 2011). The
+  x-axis of each panel refers to the ranking, and the y-axis refers to the
+  ranking probability expressed in percentage.
 }
 \description{
 It returns a panel of rankograms with integrated SUCRA curves
@@ -88,6 +88,5 @@ doi: 10.1016/j.jclinepi.2010.03.016
 \code{\link{run_model}}
 }
 \author{
-{Loukia M. Spineli}, {Chrysostomos Kalyvas},
-  {Katerina Papadimitropoulou}
+Loukia M. Spineli, Chrysostomos Kalyvas, Katerina Papadimitropoulou
 }

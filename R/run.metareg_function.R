@@ -30,6 +30,10 @@
 #'   MCMC sampling; an argument of the \code{\link[R2jags]{jags}} function
 #'   of the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
+#' @param inits A list with the initial values for the parameters; an argument
+#'   of the \code{\link[R2jags:jags]{jags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   The default argument is \code{NULL}, and JAGS generates the initial values.
 #'
 #' @return A list of R2jags outputs on the summaries of the posterior
 #'   distribution, and the Gelman-Rubin convergence diagnostic
@@ -102,7 +106,11 @@
 #'   The model runs in \code{JAGS} and the progress of the simulation appears on
 #'   the R console. The output of \code{run_metareg} is used as an S3 object by
 #'   other functions of the package to be processed further and provide an
-#'   end-user-ready output.
+#'   end-user-ready output. The model is updated until convergence using the
+#'   \code{\link[R2jags:autojags]{autojags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+#'   number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+#'   respectively.
 #'
 #'   The models described in Spineli et al. (2021), and Spineli (2019) have
 #'   been extended to incorporate one \emph{study-level covariate} variable
@@ -113,7 +121,8 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link[R2jags]{jags}}, \code{\link{run_model}}
+#' @seealso \code{\link[R2jags:autojags]{autojags}}, \code{\link[R2jags]{jags}},
+#'   \code{\link{run_model}}
 #'
 #' @references
 #' Cooper NJ, Sutton AJ, Morris D, Ades AE, Welton NJ. Addressing between-study
@@ -165,9 +174,10 @@ run_metareg <- function(full,
                         n_chains,
                         n_iter,
                         n_burnin,
-                        n_thin) {
+                        n_thin,
+                        inits = NULL) {
 
-  if (full$type != "nma" || is.null(full$type)) {
+  if (!inherits(full, "run_model") || is.null(full)) {
     stop("'full' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
@@ -246,6 +256,12 @@ run_metareg <- function(full,
     stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
   } else {
     n_thin
+  }
+  inits <- if (is.null(inits)) {
+    message("JAGS generates initial values for the parameters.")
+    NULL
+  } else {
+    inits
   }
 
   # Data in list format for R2jags
@@ -331,71 +347,99 @@ run_metareg <- function(full,
   }
 
   # Run the Bayesian analysis
-  jagsfit <- jags(data = data_jag,
-                  parameters.to.save = param_jags,
-                  model.file = textConnection(prepare_model(measure,
-                                                            model,
-                                                            covar_assumption,
-                                                            assumption)),
-                  n.chains = n_chains,
-                  n.iter = n_iter,
-                  n.burnin = n_burnin,
-                  n.thin = n_thin)
+  message("Running the model ...")
+  jagsfit0 <- jags(data = data_jag,
+                   inits = inits,
+                   parameters.to.save = param_jags,
+                   model.file = textConnection(prepare_model(measure,
+                                                             model,
+                                                             covar_assumption,
+                                                             assumption)),
+                   n.chains = n_chains,
+                   n.iter = n_iter,
+                   n.burnin = n_burnin,
+                   n.thin = n_thin)
+
+  # Update until convergence is necessary
+  message("... Updating the model until convergence")
+  jagsfit <- autojags(jagsfit0, n.iter = n_iter, n.thin = n_thin, n.update = 2)
 
   # Turn R2jags object into a data-frame
   get_results <- as.data.frame(t(jagsfit$BUGSoutput$summary))
 
   # Effect size of all unique pairwise comparisons
-  EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  #EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  EM <- t(get_results)[startsWith(rownames(t(get_results)), "EM["), ]
 
   # Predictive effects of all unique pairwise comparisons
-  EM_pred <- t(get_results %>% dplyr::select(starts_with("EM.pred[")))
+  #EM_pred <- t(get_results %>% dplyr::select(starts_with("EM.pred[")))
+  EM_pred <- t(get_results)[startsWith(rownames(t(get_results)), "EM.pred["), ]
 
   # Unique absolute risks for all interventions (only binary data)
-  abs_risk <- t(get_results %>% dplyr::select(starts_with("abs_risk[")))
+  #abs_risk <- t(get_results %>% dplyr::select(starts_with("abs_risk[")))
+  abs_risk <-
+    t(get_results)[startsWith(rownames(t(get_results)), "abs_risk["), ]
 
   # Between-trial standard deviation
-  tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  #tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  tau <- t(get_results)[startsWith(rownames(t(get_results)), "tau"), ]
 
   # Regression coefficient for all comparisons with the reference intervention
-  beta <- t(get_results %>% dplyr::select(starts_with("beta[") |
-                                           starts_with("beta")))
+  #beta <- t(get_results %>% dplyr::select(starts_with("beta[") |
+  #                                         starts_with("beta")))
+  beta <-
+    t(get_results)[startsWith(rownames(t(get_results)), "beta[") |
+                     startsWith(rownames(t(get_results)), "beta"), ]
 
   # Regression coefficient for all unique pairwise comparisons
   # (not applicable for 'common' covar_assumption)
-  beta_all <- t(get_results %>% dplyr::select(starts_with("beta.all[")))
+  #beta_all <- t(get_results %>% dplyr::select(starts_with("beta.all[")))
+  beta_all <-
+    t(get_results)[startsWith(rownames(t(get_results)), "beta.all["), ]
 
   # SUrface under the Cumulative RAnking curve values
-  SUCRA <- t(get_results %>% dplyr::select(starts_with("SUCRA")))
+  #SUCRA <- t(get_results %>% dplyr::select(starts_with("SUCRA")))
+  SUCRA <- t(get_results)[startsWith(rownames(t(get_results)), "SUCRA"), ]
 
   # Within-trial effects size
-  delta <- t(get_results %>% dplyr::select(starts_with("delta") &
-                                             !ends_with(",1]")))
+  #delta <- t(get_results %>% dplyr::select(starts_with("delta") &
+  #                                           !ends_with(",1]")))
+  delta <- t(get_results)[startsWith(rownames(t(get_results)), "delta") &
+                            !endsWith(rownames(t(get_results)), ",1]"), ]
 
   # Ranking probability of each intervention for every rank
-  effectiveness <- t(get_results %>% dplyr::select(
-    starts_with("effectiveness")))
+  #effectiveness <- t(get_results %>% dplyr::select(
+  #  starts_with("effectiveness")))
+  effectiveness <-
+    t(get_results)[startsWith(rownames(t(get_results)), "effectiveness"), ]
 
   # Estimated missingness parameter
   phi <- if (min(na.omit(unlist(item$I))) == 1 &
              max(na.omit(unlist(item$I))) == 1) {
-    t(get_results %>% dplyr::select(starts_with("phi") |
-                                      starts_with("mean.phi") |
-                                      starts_with("mean.phi[") |
-                                      starts_with("phi[")))
+    #t(get_results %>% dplyr::select(starts_with("phi") |
+    #                                  starts_with("mean.phi") |
+    #                                  starts_with("mean.phi[") |
+    #                                  starts_with("phi[")))
+    t(get_results)[startsWith(rownames(t(get_results)), "phi") |
+                     startsWith(rownames(t(get_results)), "mean.phi") |
+                     startsWith(rownames(t(get_results)), "mean.phi[") |
+                     startsWith(rownames(t(get_results)), "phi["), ]
   } else if (min(na.omit(unlist(item$I))) == 0 &
              max(na.omit(unlist(item$I))) == 1) {
-    t(get_results %>% dplyr::select(starts_with("phi[")))
+    #t(get_results %>% dplyr::select(starts_with("phi[")))
+    t(get_results)[startsWith(rownames(t(get_results)), "phi["), ]
   } else if (min(na.omit(unlist(item$I))) == 0 &
              max(na.omit(unlist(item$I))) == 0) {
     NULL
   }
 
   # Trial-arm deviance contribution for observed outcome
-  dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o")))
+  #dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o")))
+  dev_o <- t(get_results)[startsWith(rownames(t(get_results)), "dev.o"), ]
 
   # Fitted/predicted outcome
-  hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  #hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  hat_par <- t(get_results)[startsWith(rownames(t(get_results)), "hat.par"), ]
 
   # Total residual deviance
   dev <- jagsfit$BUGSoutput$summary["totresdev.o", "mean"]
@@ -483,7 +527,6 @@ run_metareg <- function(full,
                        n_iter = n_iter,
                        n_burnin = n_burnin,
                        n_thin = n_thin,
-                       type = "nmr",
                        abs_risk = abs_risk)
     nma_results <- append(ma_results, list(SUCRA = SUCRA,
                                            effectiveness = effectiveness,
@@ -508,12 +551,13 @@ run_metareg <- function(full,
                        n_iter = n_iter,
                        n_burnin = n_burnin,
                        n_thin = n_thin,
-                       type = "nmr",
                        abs_risk = abs_risk)
     nma_results <- append(ma_results, list(SUCRA = SUCRA,
                                            effectiveness = effectiveness,
                                            D = full$D))
   }
+
+  class(ma_results) <- class(nma_results) <- "run_metareg"
 
   ifelse(item$nt > 2, return(nma_results), return(ma_results))
 }

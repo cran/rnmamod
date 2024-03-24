@@ -26,6 +26,10 @@
 #'   sampling; an argument of the \code{\link[R2jags:jags]{jags}} function of
 #'   the R-package \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
 #'   The default argument is 1.
+#' @param inits A list with the initial values for the parameters; an argument
+#'   of the \code{\link[R2jags:jags]{jags}} function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags}.
+#'   The default argument is \code{NULL}, and JAGS generates the initial values.
 #'
 #' @return An R2jags output on the summaries of the posterior distribution, and
 #'   the Gelman-Rubin convergence diagnostic (Gelman et al., 1992) of the
@@ -100,7 +104,12 @@
 #'   baseline arm of the multi-arm trial (Spineli, 2021).
 #'
 #'   \code{run_ume} runs Bayesian unrelated mean effects model in \code{JAGS}.
-#'   The progress of the simulation appears on the R console.
+#'   The progress of the simulation appears on the R console. The model is
+#'   updated until convergence using the \code{\link[R2jags:autojags]{autojags}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+#'   number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+#'   respectively.
 #'
 #'   The output of \code{run_ume} is not end-user-ready. The
 #'   \code{\link{ume_plot}} function uses the output of \code{run_ume} as an S3
@@ -112,7 +121,8 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link[R2jags:jags]{jags}},
+#' @seealso \code{\link[R2jags:autojags]{autojags}},
+#'   \code{\link[R2jags:jags]{jags}},
 #'   \code{\link{prepare_ume}}, \code{\link{run_model}},
 #'   \code{\link{run_series_meta}}, \code{\link{ume_plot}}
 #'
@@ -158,10 +168,15 @@
 #' }
 #'
 #' @export
-run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
+run_ume <- function(full,
+                    n_iter,
+                    n_burnin,
+                    n_chains,
+                    n_thin,
+                    inits = NULL) {
 
 
-  if (full$type != "nma" || is.null(full$type)) {
+  if (!inherits(full, "run_model") || is.null(full)) {
     stop("'full' must be an object of S3 class 'run_model'.",
          call. = FALSE)
   }
@@ -215,6 +230,12 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
     stop("The argument 'n_thin' must be a positive integer.", call. = FALSE)
   } else {
     n_thin
+  }
+  inits <- if (is.null(inits)) {
+    message("JAGS generates initial values for the parameters.")
+    NULL
+  } else {
+    inits
   }
 
   # Move multi-arm trials at the bottom
@@ -303,15 +324,17 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
     #                                      N[(ns - ns_multi + 1):ns, ]),
     #                          studlab = 1:ns_multi)
 
-    connected <-
-      netconnection(treat1 = unlist(multi_network[, 2]),
-                    treat2 = unlist(multi_network[, 3]),
-                    studlab = unlist(multi_network[, 1]))$n.subnets
+    #connected <-
+    #  netconnection(treat1 = unlist(multi_network[, 2]),
+    #                treat2 = unlist(multi_network[, 3]),
+    #                studlab = unlist(multi_network[, 1]))$n.subnets
+    connected <- find_subnetworks(multi_network)$num_subnetworks
 
     ## For the case of a disconnected network of multi-arm trials
     if (connected > 1) {
       dist_mat <-
-        netconnection(treat1, treat2, studlab, data = multi_network)$D.matrix
+        #netconnection(treat1, treat2, studlab, data = multi_network)$D.matrix
+        find_subnetworks(multi_network)$distance_mat
       group0 <- apply(dist_mat, 2, function(x) length(which(!is.infinite(x))))
       group <- data.frame("treat" = attributes(group0)$names, "freq" = group0)
 
@@ -444,36 +467,47 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
   }
 
   # Run the Bayesian analysis
-  jagsfit <- suppressWarnings({jags(data = data_jag,
-                  parameters.to.save = param_jags,
-                  model.file = textConnection(prepare_ume(measure,
-                                                          model,
-                                                          assumption,
-                                                          connected)),
-                  n.chains = n_chains,
-                  n.iter = n_iter,
-                  n.burnin = n_burnin,
-                  n.thin = n_thin,
-                  DIC = FALSE)
+  message("Running the model ...")
+  jagsfit0 <- suppressWarnings({jags(data = data_jag,
+                   parameters.to.save = param_jags,
+                   model.file = textConnection(prepare_ume(measure,
+                                                           model,
+                                                           assumption,
+                                                           connected)),
+                   n.chains = n_chains,
+                   n.iter = n_iter,
+                   n.burnin = n_burnin,
+                   n.thin = n_thin,
+                   DIC = FALSE,
+                   inits = inits)
   })
+
+  # Update until convergence is necessary
+  message("... Updating the model until convergence")
+  jagsfit <- autojags(jagsfit0, n.iter = n_iter, n.thin = n_thin, n.update = 2)
 
   # Turn summary of posterior results (R2jags object) into a data-frame
   # to select model parameters (using 'dplyr')
   get_results <- as.data.frame(t(jagsfit$BUGSoutput$summary))
 
   # Effect size of all unique pairwise comparisons
-  EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  #EM <- t(get_results %>% dplyr::select(starts_with("EM[")))
+  EM <- t(get_results)[startsWith(rownames(t(get_results)), "EM["), ]
 
   # Between-trial standard deviation
-  tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  #tau <- t(get_results %>% dplyr::select(starts_with("tau")))
+  tau <- t(get_results)[startsWith(rownames(t(get_results)), "tau"), ]
   # For the subnetwork of multi-arm trials
-  m_tau <- t(get_results %>% dplyr::select(starts_with("m.tau")))
+  #m_tau <- t(get_results %>% dplyr::select(starts_with("m.tau")))
+  m_tau <- t(get_results)[startsWith(rownames(t(get_results)), "m.tau"), ]
 
   # Trial-arm deviance contribution for observed outcome
-  dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o[")))
+  #dev_o <- t(get_results %>% dplyr::select(starts_with("dev.o[")))
+  dev_o <- t(get_results)[startsWith(rownames(t(get_results)), "dev.o["), ]
 
   # Fitted/predicted outcome
-  hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  #hat_par <- t(get_results %>% dplyr::select(starts_with("hat.par")))
+  hat_par <- t(get_results)[startsWith(rownames(t(get_results)), "hat.par"), ]
 
   # Total residual deviance
   dev <- jagsfit$BUGSoutput$summary["totresdev.o", "mean"]
@@ -537,7 +571,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
   model_assessment <- data.frame(DIC, pD, dev)
 
   ## Collect the minimum results at common
-  results <- if (model == "RE") {
+  results0 <- if (model == "RE") {
     list(EM = EM,
          dev_o = dev_o,
          hat_par = hat_par,
@@ -556,8 +590,7 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
          n_chains = n_chains,
          n_iter = n_iter,
          n_burnin = n_burnin,
-         n_thin = n_thin,
-         type = "ume")
+         n_thin = n_thin)
   } else {
     list(EM = EM,
          dev_o = dev_o,
@@ -575,17 +608,20 @@ run_ume <- function(full, n_iter, n_burnin, n_chains, n_thin) {
          n_chains = n_chains,
          n_iter = n_iter,
          n_burnin = n_burnin,
-         n_thin = n_thin,
-         type = "ume")
+         n_thin = n_thin)
   }
 
   # Return different list of results according to a condition
-  if (is.null(impr_ume$nbase_multi)) {
-    return(results)
+  results <- if (is.null(impr_ume$nbase_multi)) {
+    results0
   } else {
-    return(append(results,
-                  list(m_tau = m_tau,
-                       frail_comp =
-                         paste0(impr_ume$t2_bn, "vs", impr_ume$t1_bn))))
+    append(results0,
+           list(m_tau = m_tau,
+                frail_comp =
+                  paste0(impr_ume$t2_bn, "vs", impr_ume$t1_bn)))
   }
+
+  class(results) <- "run_ume"
+
+  return(results)
 }

@@ -98,7 +98,7 @@
 #'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso code{\link{league_table_absolute}},
+#' @seealso \code{\link{league_table_absolute}},
 #'   \code{\link[writexl:write_xlsx]{write_xlsx}}
 #'
 #' @references
@@ -545,13 +545,13 @@ league_table_absolute_user <- function(data,
   # Tabulate relative and absolute effects for the basic parameters
   n_t <- length(drug_names0)
   tab0 <- data.frame(drug_names0,
-                     round(rbind(rep(0, 3), full_lor[1:(n_t - 1), ]), 2),
+                     round(rbind(rep(1, 3), exp(full_lor[1:(n_t - 1), ])), 2),
                      absol_risk * 1000,
                      rbind(rep(0, 3), round(full_rd[1:(n_t - 1), ] * 1000, 0)))
   colnames(tab0) <- c("Interventions",
                       "OR", "lower", "upper",
-                      "AR", "lower", "upper",
-                      "RD", "lower", "upper")
+                      "AR", "lower AR", "upper AR",
+                      "RD", "lower RD", "upper RD")
   tab <- if (all.equal(hiera, as.integer(hiera)) == FALSE) {
     subset(tab0, is.element(tab0$Interventions, drug_names))[order(-hiera), ]
   } else {
@@ -561,7 +561,7 @@ league_table_absolute_user <- function(data,
 
   # Write the table as .xlsx
   if (save_xls == TRUE) {
-    write_xlsx(tab, paste0("Table relative $ absolute", ".xlsx"))
+    write_xlsx(tab, paste0("Table relative & absolute", ".xlsx"))
   }
 
   # Collect results

@@ -67,12 +67,12 @@
 heatmap_missing_network <- function(data, drug_names) {
 
 
-  if (dim(data %>% select(starts_with("m")))[2] == 0) {
+  if (dim(data[, startsWith(colnames(data), "m")])[2] == 0) {
     aa <- "Missing participant outcome data have *not* been collected."
     stop(paste(aa, "This function cannot be used."), call. = FALSE)
   }
 
-  if (dim(data %>% dplyr::select(starts_with("r")))[2] > 0) {
+  if (dim(data[, startsWith(colnames(data), "r")])[2] > 0) {
     measure <- "OR"
   } else {
     measure <- "MD"
@@ -148,13 +148,6 @@ heatmap_missing_network <- function(data, drug_names) {
   pair_mod <- data.frame(study, t_long_form, m_long_form, n_long_form)
   colnames(pair_mod) <- c("study", "t1", "t2", "m1", "m2", "n1", "n2")
   pair_mod[pair_mod < 0] <- NA
-  #pair_mod <- pairwise(as.list(dat$t),
-  #                      event = as.list(dat$m_pseudo),
-  #                      n = as.list(dat$N),
-  #                      data = cbind(dat$t, dat$m_pseudo, dat$N),
-  #                      studlab = 1:dat$ns)[, c(3:6, 8, 7, 9)]
-  #colnames(pair_mod) <- c("study", "t1", "t2", "m1", "m2", "n1", "n2")
-
 
   # The comparison between the second and first arms of each trial
   comp <- paste(pair_mod[, "t2"], "vs", pair_mod[, "t1"])

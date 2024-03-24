@@ -36,26 +36,22 @@
 #'   The default argument is 1.
 #'
 #' @return When \code{base_risk} is scalar (fixed baseline), the function
-#'   returns the user-defined baseline for the selected reference intervention.
-#'   When \code{base_risk} is a vector (random baseline), the function returns
-#'   a vector with the calculated logit of an event for the selected reference
-#'   intervention and its precision. Finally, when \code{base_risk} is a matrix
-#'   (predicted baseline), the function returns the following elements:
+#'   returns the user-defined baseline for the selected reference intervention
+#'   in the logit scale. When \code{base_risk} is a vector (random baseline),
+#'   the function returns a vector with the calculated logit of an event for the
+#'   selected reference intervention and its precision. Finally, when
+#'   \code{base_risk} is a matrix (predicted baseline), the function returns the
+#'   following elements:
 #'   \item{ref_base}{A vector with the posterior mean and precision of the
-#'   predicted logit of an event for the selected reference intervention.
+#'   \bold{predicted} logit of an event for the selected reference intervention.
 #'   This vector is be passed to \code{\link{run_model}} and
 #'   \code{\link{run_metareg}}.}
-#'   \item{mean_base_logit}{The posterior distribution of the summary mean of
-#'   the random effects in the logit scale.}
-#'   \item{tau_base_logit}{The posterior distribution of the between-trial
-#'   standard deviation in the logit scale.}
-#'
-#'   When \code{base_risk} is a matrix, the function also returns a forest plot
-#'   with the estimated trial-specific probability of an event and 95\% credible
-#'   intervals (the random effects) alongside the corresponding observed
-#'   probability of an event for the selected reference intervention. A grey
-#'   rectangular illustrates the summary mean and 95\% credible interval of the
-#'   random effects.
+#'   \item{figure}{A forest plot on the trial-specific observed and estimated
+#'   baseline risk. See 'Details'.}
+#'   \item{table_baseline}{A table with the posterior and predictive
+#'   distribution of the summary baseline mean and the posterior distribution of
+#'   the between-trial standard deviation in baseline. All results are in the
+#'   logit scale.}
 #'
 #' @details If \code{base_risk} is a matrix, \code{baseline_model} creates the
 #'   hierarchical baseline model in the JAGS dialect of the BUGS language.
@@ -67,9 +63,24 @@
 #'   uniform prior distribution is assigned on the between-trial standard
 #'   deviation with upper and lower limit equal to 0 and 5, respectively.
 #'
+#'   When \code{base_risk} is a matrix, the function also returns a forest plot
+#'   with the estimated trial-specific probability of an event and 95\% credible
+#'   intervals (the random effects) alongside the corresponding observed
+#'   probability of an event for the selected reference intervention. A grey
+#'   rectangular illustrates the summary mean and 95\% credible interval of the
+#'   random effects.
+#'
+#'   When \code{base_risk} is a matrix (predicted baseline), the model is
+#'   updated until convergence using the \code{\link[R2jags:autojags]{autojags}}
+#'   function of the R-package
+#'   \href{https://CRAN.R-project.org/package=R2jags}{R2jags} with 2 updates and
+#'   number of iterations and thinning equal to \code{n_iter} and \code{n_thin},
+#'   respectively.
+#'
 #' @author {Loukia M. Spineli}
 #'
-#' @seealso \code{\link{prepare_model}}, \code{\link[R2jags:jags]{jags}},
+#' @seealso \code{\link{prepare_model}},
+#'   \code{\link[R2jags:autojags]{autojags}}, \code{\link[R2jags:jags]{jags}},
 #'   \code{\link{run_metareg}}, \code{\link{run_model}}
 #'
 #' @references
@@ -154,7 +165,7 @@ baseline_model <- function(base_risk,
   }
 
   if (base_type == "predicted") {
-    message("**Baseline model (predictions)**")
+    message("**Running the baseline model (predictions)**")
     # Data for the baseline model
     data_jag_base <- list("r.base" = base_risk1[, 1],
                           "n.base" = base_risk1[, 2],
@@ -167,39 +178,48 @@ baseline_model <- function(base_risk,
                          "tau.base")
 
     # Run the baseline model
-    jagsfit_base <- jags(data = data_jag_base,
-                         parameters.to.save = param_jags_base,
-                         model.file = textConnection('
-                         model {
-                            for (i in 1:ns.base) {
-                              r.base[i] ~ dbin(p.base[i], n.base[i])
-                              logit(p.base[i]) <- u.base[i]
-                              u.base[i] ~ dnorm(m.base, prec.base)
-                            }
-                            # predicted baseline risk (logit scale)
-                            base.risk.logit ~ dnorm(m.base, prec.base)
-                            m.base ~ dnorm(0, .0001)
-                            prec.base <- pow(tau.base, -2)
+    jagsfit_base0 <- jags(data = data_jag_base,
+                          parameters.to.save = param_jags_base,
+                          model.file = textConnection('
+                          model {
+                             for (i in 1:ns.base) {
+                               r.base[i] ~ dbin(p.base[i], n.base[i])
+                               logit(p.base[i]) <- u.base[i]
+                               u.base[i] ~ dnorm(m.base, prec.base)
+                             }
+                             # predicted baseline risk (logit scale)
+                             base.risk.logit ~ dnorm(m.base, prec.base)
+                             m.base ~ dnorm(0, .0001)
+                             prec.base <- pow(tau.base, -2)
                             tau.base ~ dunif(0, 5)
-                         }
-                                                     '),
-                         n.chains = n_chains,
-                         n.iter = n_iter,
-                         n.burnin = n_burnin,
-                         n.thin = n_thin)
+                          }
+                                                      '),
+                          n.chains = n_chains,
+                          n.iter = n_iter,
+                          n.burnin = n_burnin,
+                          n.thin = n_thin)
+
+    message("... Updating the baseline model until convergence")
+    jagsfit_base <- autojags(jagsfit_base0,
+                             n.iter = n_iter,
+                             n.thin = n_thin,
+                             n.update = 2)
 
     # Turn R2jags object into a data-frame
     get_results_base <- as.data.frame(t(jagsfit_base$BUGSoutput$summary))
 
     # Obtain posterior distribution from parameters of interest
-    pred_base_logit <- t(get_results_base %>%
-                           dplyr::select(starts_with("base.risk.logit")))
-    mean_base_logit <- t(get_results_base %>%
-                           dplyr::select(starts_with("m.base")))
-    tau_base_logit <- t(get_results_base %>%
-                           dplyr::select(starts_with("tau.base")))
-    trial_base_logit <- t(get_results_base %>%
-                            dplyr::select(starts_with("u.base[")))
+    pred_base_logit <-
+      t(get_results_base)[startsWith(rownames(t(get_results_base)),
+                                     "base.risk.logit"), ]
+    mean_base_logit <-
+      t(get_results_base)[startsWith(rownames(t(get_results_base)), "m.base"), ]
+    tau_base_logit <-
+      t(get_results_base)[startsWith(rownames(t(get_results_base)),
+                                     "tau.base"), ]
+    trial_base_logit <-
+      t(get_results_base)[startsWith(rownames(t(get_results_base)),
+                                     "u.base["), ]
   } else if (base_type == "fixed") {
     message("**Fixed baseline risk assigned**")
   } else if (base_type == "random") {
@@ -208,19 +228,34 @@ baseline_model <- function(base_risk,
 
   ref_base <- if (is.element(base_type, c("fixed", "random"))) {
     base_risk1
-  } else if (is.element(base_type, "predicted")) {
+  } else if (!is.element(base_type, c("fixed", "random"))) {
     c(pred_base_logit[1], 1 / (pred_base_logit[2])^2)
   }
 
-  #Draw forest-plot of observed & estimated probabilities for "predicted"
-  fig <- if (is.element(base_type, "predicted")) {
+  tab_base <- if (base_type == "predicted") {
+    cri_mean <- paste0("(", round(mean_base_logit[3], 2), ",",
+                       " ", round(mean_base_logit[7], 2), ")")
+    cri_tau <- paste0("(", round(tau_base_logit[3], 2), ",",
+                      " ", round(tau_base_logit[7], 2), ")")
+    cri_pred <- paste0("(", round(pred_base_logit[3], 2), ",",
+                       " ", round(pred_base_logit[7], 2), ")")
+    data.frame(rbind(c(round(mean_base_logit[1:2], 2), cri_mean),
+                     c(round(tau_base_logit[c(5, 2)], 2), cri_tau),
+                     c(round(pred_base_logit[1:2], 2), cri_pred)))
+  } else {
+    matrix("Not applicable", nrow = 3, ncol = 3)
+  }
+  rownames(tab_base) <- c("Summary mean", "Between-trial SD", "Predicted mean")
+
+
+  # Draw forest-plot of observed & estimated probabilities for 'predicted'
+  fig <- if (base_type == "predicted") {
     # Back-transform to probability (trial-specific estimate)
     estim_prob <- exp(trial_base_logit[, c(1, 3, 7)]) /
       (1 + exp(trial_base_logit[, c(1, 3, 7)]))
     # Back-transform to probability (summary estimate)
     summary_prob <- round(exp(mean_base_logit[c(1, 3, 7)]) /
       (1 + exp(mean_base_logit[c(1, 3, 7)])) * 100, 0)
-
 
     # Create dataset for the forest-plot
     dataplot <- data.frame(rbind(matrix(rep(base_risk1[, 1] / base_risk1[, 2], 3),
@@ -242,7 +277,11 @@ baseline_model <- function(base_risk,
                       " ", "(", round(tau_base_logit[3], 2), ",", " ",
                       round(tau_base_logit[7], 2), ")")
 
-    # Crate forest-plot
+    # Difference between 'Observed' and 'Estimated' per trial
+    diff_type <- diff(dataplot$point, dim(dataplot)[1] / 2, 1)
+    diff_dummy <- rep(ifelse(diff_type == 0, 0, 1), 2)
+
+    # Create forest-plot
     ggplot(data = dataplot,
            aes(x = order,
                y = point,
@@ -250,7 +289,7 @@ baseline_model <- function(base_risk,
                ymax = upper)) +
       geom_hline(yintercept = summary_prob,
                  col = "grey",
-                 size = 1,
+                 linewidth = 1,
                  lty = 2) +
       geom_rect(aes(xmin = -Inf,
                     xmax = Inf,
@@ -258,11 +297,13 @@ baseline_model <- function(base_risk,
                     ymax = summary_prob[3]),
                 alpha = 0.01,
                 fill = "grey") +
-      geom_linerange(size = 1.5,
+      geom_linerange(linewidth = 1.5,
                      position = position_dodge(width = 0.5)) +
       geom_point(aes(colour = type),
-                 stroke = 0.3,
-                 size = 2.5) +
+                 size = ifelse(dataplot$type == "Estimated", 2.5, 4.0),
+                 alpha = ifelse(diff_dummy == 0, 0.6, 1),
+                 stroke = 0.3) +
+      # Label the point estimate
       geom_text(aes(x = order,
                     y = point,
                     label = point),
@@ -272,6 +313,7 @@ baseline_model <- function(base_risk,
                 size = 4.0,
                 check_overlap = FALSE,
                 position = position_dodge(width = 0.5)) +
+      # Label the lower bound
       geom_text(data = subset(dataplot, type == "Estimated"),
                 aes(x = order,
                     y = lower,
@@ -282,6 +324,7 @@ baseline_model <- function(base_risk,
                 size = 4.0,
                 check_overlap = FALSE,
                 position = position_dodge(width = 0.5)) +
+      # Label the upper bound
       geom_text(data = subset(dataplot, type == "Estimated"),
                 aes(x = order,
                     y = upper,
@@ -307,6 +350,7 @@ baseline_model <- function(base_risk,
            caption = caption) +
       coord_flip() +
       theme_classic() +
+      guides(color = guide_legend(override.aes = list(size = 3))) +
       theme(axis.text.x = element_text(color = "black", size = 12),
             axis.text.y = element_text(color = "black", size = 12),
             axis.title.x = element_text(color = "black", face = "bold",
@@ -317,14 +361,26 @@ baseline_model <- function(base_risk,
                                         size = 12),
             plot.caption = element_text(hjust = 0, face = "bold", size = 11,
                                         color = "grey47", lineheight = 1.1))
+  } else {
+    NULL
   }
 
-  results <- list(ref_base = ref_base,
-                  figure = fig)
+  results <- na.omit(
+    list(ref_base = ref_base,
+         figure = fig,
+         table_baseline =
+           knitr::kable(
+             tab_base,
+             col.names = c("Mean/median", "Standard dev.", "95% CrI"),
+             align = "ccc",
+             caption =
+               "Posterior and predictive results of baseline model")
+         )
+    )
   #if (!is.element(base_type, c("fixed", "random"))) {
   #  results <- append(results, list(mean_base_logit = mean_base_logit,
   #                                  tau_base_logit = tau_base_logit))
   #}
 
-  return(results)
+  return(Filter(Negate(is.null), results))
 }
